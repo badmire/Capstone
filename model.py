@@ -45,13 +45,14 @@ def loadData(filename):
         data_lst.append(curr_row)
         print(f'Processed {line_count} lines.')
 
-
+#Make these 2 lists equivalent in file names to ensure diffs and results line up
 file_names = loadFiles()
+file_names_test = loadFiles()
+
 for name in file_names:
     loadData(name)
 
-file_names = loadFiles()
-for name in file_names:
+for name in file_names_test:
     loadResults(name, test_number)
 
 for iterator in range(len(data_lst)):
