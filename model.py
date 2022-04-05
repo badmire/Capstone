@@ -59,6 +59,9 @@ for iterator in range(len(data_lst)):
 
 dataset = pd.DataFrame(data_lst)
 
+test = data_lst[0]
+
+
 data = dataset.sample(frac=0.95, random_state=786)
 data_unseen = dataset.drop(data.index)
 data.reset_index(inplace=True, drop=True)
@@ -67,9 +70,15 @@ print('Data for Modeling: ' + str(data.shape))
 print('Unseen Data For Predictions: ' + str(data_unseen.shape))
 
 s = setup(data, target = 'child_result', numeric_features= ['num_changes'])
+numeric_features= ['num_changes']
 
 rf = create_model('rf',fold=3)
 print(rf)
+
+tuned_rf = tune_model(rf, fold = 3)
+print(tuned_rf)
+
+predict_model(tuned_rf)
 
 # plot_model(rf)
 
