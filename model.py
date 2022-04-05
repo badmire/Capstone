@@ -48,12 +48,11 @@ def loadData(filename):
 
 file_names = loadFiles()
 for name in file_names:
-    loadResults(name, test_number)
+    loadData(name)
 
 file_names = loadFiles()
 for name in file_names:
-    loadData(name)
-
+    loadResults(name, test_number)
 
 for iterator in range(len(data_lst)):
     data_lst[iterator]['child_result'] = result_lst[iterator]['child_result']
