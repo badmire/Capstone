@@ -1,6 +1,9 @@
-def confidence_threshold(prediction_list):
+import random
+
+
+def confidenceThreshold(prediction_list):
     """
-    Takes in a list of dictionaries stored as prediction_list and orders it according to the following structure: 
+    Take in a list of dictionaries stored as prediction_list and order it according to the following structure: 
         1. All failed tests
         2. Confidence: low to high
 
@@ -11,8 +14,7 @@ def confidence_threshold(prediction_list):
     return(sorted_prediction_list)
 
     """
-    pass
-    # your code here
+    return sorted(prediction_list, key=lambda x: (x["prediction"], x["confidence"]))
 
 
 def versionMatch(diffs, tests):
@@ -24,3 +26,19 @@ def versionMatch(diffs, tests):
     """
     pass
     # your code here
+
+
+if __name__ == "__main__":
+
+    # Informal test for confidenceThreshold
+    test_list = []
+    for i in range(50):
+        test_list.append(
+            {
+                "prediction": "SUCCESS" if random.randint(0, 1) else "FAILURE",
+                "confidence": random.random(),
+            }
+        )
+    result = confidenceThreshold(test_list)
+    for thing in result:
+        print(thing)
