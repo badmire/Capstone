@@ -11,7 +11,7 @@ elif sys.argv[1] == "-h":
     print("1st argument == source directory, 2nd argument == destination directory")
     exit()
 
-#Build list of target files
+# Build list of target files
 all_files = os.listdir(sys.argv[1])
 diff_files = []
 
@@ -20,7 +20,7 @@ for current in all_files:
         diff_files.append(current)
 
 for diff in diff_files:
-    #Set sane values for current diff
+    # Set sane values for current diff
     total_changes_diff = 0
     total_insertions_diff = 0
     total_deletions_diff = 0
@@ -34,7 +34,7 @@ for diff in diff_files:
         for line in target.readlines():
             allLines.append(line)
 
-    git_div_ver = allLines[0].split()[2]  # Git diff ver
+    git_div_ver = allLines[0].split()[3]  # Git diff ver
     total_changes_dif = allLines[-1].split()[0]  # Total changes for entire diff
     total_insertions_dif = allLines[-1].split()[3]  # Total insertions for entire diff
     total_deletions_dif = allLines[-1].split()[5]  # total deletions for entire diff
@@ -65,7 +65,9 @@ for diff in diff_files:
 
         output.append(current)
 
-    with open(sys.argv[2] + "/" + diff.split("_diff")[0] + ".csv", "w", newline="") as out_target:
+    with open(
+        sys.argv[2] + "/" + diff.split("_diff")[0] + ".csv", "w", newline=""
+    ) as out_target:
         csvwriter = csv.writer(out_target, delimiter=",", quotechar="|")
         csvwriter.writerow(
             [
