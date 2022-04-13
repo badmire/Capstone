@@ -25,7 +25,7 @@ def versionMatch(diffs, tests):
     Each entry in the output dictionary is a key value pair, with the key the version type, and the value a tuple. The first item in the tuple will be the appropriate diff csv that matches the version. The second item in the tuple will be an array of all test result csv that match the version.
 
     """
-    output = {}
+    output = dict()
     for diff in diffs:
         # Each dictionary value is an array, [*path to diff*, [*array of paths to tests*]]
         output[re.findall("\d+_\d+_\d+_\d+", diff)[0]] = [diff, []]
@@ -35,7 +35,7 @@ def versionMatch(diffs, tests):
             output[re.findall("\d+_\d+_\d+_\d+", test)[0]][1].append(test)
         except:  # If no match is found
             print(
-                f"{test} does not appear to be a file with correctly formatted version number in it's path."
+                f"Path :{test}\n This path does not appear to be a file with correctly formatted version number in it's path."
             )
             continue
 
