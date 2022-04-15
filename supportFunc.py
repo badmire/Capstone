@@ -27,7 +27,7 @@ def loadFiles(File_Type):
     return file_names
 
 
-def versionMatch(diff_dir, test_dir):
+def versionMatch():
     """
     Take in path to a directory for diffs, and one for tests, return dictionary with diffs matched to test sets.
 
