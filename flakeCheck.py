@@ -39,5 +39,7 @@ if __name__ == "__main__":
                         output[k][1][current["test_name"]] = TestStruct(
                             current["test_name"], result, current["instrument_name"]
                         )
-                    else:
-                        pass  #
+                    else:  # I'm in hell. How did I get here?
+                        output[k][1][current["test_name"]].result = (
+                            output[k][1][current["test_name"]].result + result
+                        )
