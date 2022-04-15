@@ -1,5 +1,6 @@
 import random
 import re
+import csv
 from tkinter.filedialog import askopenfilenames
 
 
@@ -49,6 +50,67 @@ def versionMatch():
             )
             continue
 
+    return output
+
+
+class TestStruct:
+    def __init__(self, name):
+        self.name = name
+        self.current_score = -1
+        # Array of tuples, one with result, one with machine, if any.
+        self.tests = []
+        # Historical pass fail rate, dummy value for now
+        self.historical = 0.5
+
+    def __eq__(self, other):
+        if self.name == other:
+            return True
+        else:
+            return False
+
+    def __repr__(self):
+        return f"TestStruct:{self.name}"
+
+
+def condenseTests(vM_dict):
+    """
+    Take in matched set from versionMatch(), load into TestStruct for averaging
+
+    vM_dict == versionMatch() return value
+
+    return:
+    {
+        diff_version: [
+            ["path/to/diff",[array/of/paths/to/tests]],
+            {test_name: TestStruct}
+        ]
+    }
+    """
+    output = dict()
+
+    for k, v in vM_dict.items():
+        output[k] = [v, dict()]
+        for test_csv in v[1]:
+            with open(test_csv, "r") as csv_file:
+                current = csv.DictReader(csv_file)
+                for row in current:
+                    if (
+                        row["result"] == "skipped"
+                    ):  # Don't let skipped test effect weight
+                        continue
+
+                    if row["test_name"] not in output:
+                        # create new
+                        output[k][1][row["test_name"]] = TestStruct(row["test_name"])
+                    # update existing/give current values
+                    if row["instrument_name"] is not None:
+                        output[k][1][row["test_name"]].tests.append(
+                            (row["result"], row["instrument_name"])
+                        )
+                    else:
+                        output[k][1][row["test_name"]].tests.append(
+                            (row["result"], None)
+                        )
     return output
 
 
