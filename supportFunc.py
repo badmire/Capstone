@@ -1,3 +1,4 @@
+from multiprocessing.sharedctypes import Value
 import random
 import re
 import csv
@@ -23,7 +24,7 @@ def confidenceThreshold(prediction_list):
 def loadFiles(File_Type):
     # THIS FUNCTION NEEDS TO CHANGE TO ACCEPT A PATH W/O HUMAN INTERACTION
     # A command line argument perhaps?
-    file_names = askopenfilenames(title="File_Type", filetypes=[("Data", ("*.csv"))])
+    file_names = askopenfilenames(title=File_Type, filetypes=[("Data", ("*.csv"))])
     # print(file_names)
     return file_names
 
@@ -69,7 +70,7 @@ class TestStruct:
             return False
 
     def __repr__(self):
-        return f"TestStruct:{self.name}"
+        return f"TestStruct: {self.name}"
 
 
 def condenseTests(vM_dict):
@@ -88,14 +89,19 @@ def condenseTests(vM_dict):
     """
     output = dict()
 
+    lines_processed = 0
     for k, v in vM_dict.items():
         output[k] = [v, dict()]
         for test_csv in v[1]:
-            with open(test_csv, "r") as csv_file:
+            with open(test_csv, "r", encoding="utf8") as csv_file:
                 current = csv.DictReader(csv_file)
                 for row in current:
+                    lines_processed += 1
                     if (
                         row["result"] == "skipped"
+                        or row["result"] == "untested"
+                        # row["result"]
+                        # == "ABORTED"
                     ):  # Don't let skipped test effect weight
                         continue
 
@@ -111,23 +117,90 @@ def condenseTests(vM_dict):
                         output[k][1][row["test_name"]].tests.append(
                             (row["result"], None)
                         )
+            print(f"Lines processed: {lines_processed}")
+    return output
+
+
+def loadDiffs(vM_dict):
+    """
+    Take in matched set from version match, output diffs info dict with version as k, dict as value.
+
+    Each value has this format:
+    total_change
+    total_add
+    total_del
+    total_fchange
+    files : array of dicts
+        name
+        extension
+        file_change
+        file_add
+        file_del
+    """
+    output = dict()
+
+    for k, v in vM_dict.items():
+        current = dict()
+        with open(v[0], "r", encoding="utf8") as target:
+            diff = csv.DictReader(target)
+            file_changes = []
+
+            for row in diff:
+                current["total_change"] = row["total changes for diff"]
+                current["total_add"] = row["total addtions for diff"]
+                current["total_del"] = row["total deletions for diff"]
+                current["total_fchange"] = row["total number of files changed for diff"]
+                current_file = dict()
+                current_file["name"] = row["Filename"]
+                current_file["extension"] = row["file extension"]
+                current_file["file_change"] = row["total changes for file"]
+                current_file["file_add"] = row["total additions for file"]
+                current_file["file_del"] = row["total deletions for file"]
+                file_changes.append(current_file)
+
+            current["files"] = file_changes
+            output[k] = current
+
     return output
 
 
 if __name__ == "__main__":
-    from tkinter.filedialog import askopenfilenames
-
     # Informal test for versionMatch
-    diffs_paths = askopenfilenames(title="Select file", filetypes=[("Data", ("*.csv"))])
-    test_paths = askopenfilenames(title="Select file", filetypes=[("Data", ("*.csv"))])
+    # diffs_paths = askopenfilenames(title="Select file", filetypes=[("Data", ("*.csv"))])
+    # test_paths = askopenfilenames(title="Select file", filetypes=[("Data", ("*.csv"))])
 
-    result = versionMatch(diffs_paths, test_paths)
+    result = versionMatch()
+
+    diffs = dict()
 
     for k, v in result.items():
-        print(k)
-        print(f"diff: {v[0]}")
-        for path in v[1]:
-            print(f"    {path}")
+        diffs[k] = loadDiffs(v[0])
+
+    # for k, v in diffs.items():
+    #     print(f"{k}:")
+    #     for i, j in v.items():
+    #         print(i, j)
+
+    # ***Output pass/fail info***
+    # condensed_tests = condenseTests(result)
+
+    # print(f"number of tests: {len(condensed_tests)}")
+
+    # for diffk, diffv in condensed_tests.items():
+    #     pass_count = 0
+    #     fail_count = 0
+    #     weird = 0
+    #     for testk, testv in diffv[1].items():
+    #         for test_case in testv.tests:
+    #             if test_case[0] == "passed":
+    #                 # test_case[0] == "SUCCESS":
+    #                 pass_count += 1
+    #             elif test_case[0] == "failed":
+    #                 # test_case[0] == "FAILURE":
+    #                 fail_count += 1
+    #             else:
+    #                 print(test_case[0])
+    #     print(f"{diffk}: passed: {pass_count}, failed: {fail_count}")
 
     # # Informal test for confidenceThreshold
     # test_list = []

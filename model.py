@@ -9,58 +9,74 @@ import csv
 import pandas as pd
 from supportFunc import *
 
+# ****************************
+# **Brandon Fuck-around zone**
+# ****************************
 
-test_number = 0
-result_lst = []
-data_lst = []
+# Load and match diffs to tests
+result = versionMatch()
+
+# Load tests and condense them into TestStruct class
+condensed_tests = condenseTests(result)
+
+print(f"number of diffs: {len(condensed_tests)}")
+
+# Load diffs/features
+diffs = loadDiffs(result)
+
+# Build final dict for data frame
+# df_dict = dict()
+# for version, values in diffs.items():  # Iterate through each version
+#     df_dict[version] = dict()
+#     for k, v in values.items():  # Load in features
+#         df_dict[version][k] = v
+
+#     for testk, testv in condensed_tests[version][
+#         1
+#     ].items():  # Iterate through each test
+#         # Calculate average pass/fail score
+#         running_total = 0
+#         for test_case in testv.tests:
+#             if test_case[0] == "passed":
+#                 running_total += 1
+
+#         df_dict[version][testv.name] = dict()
+
+#         df_dict[version][testv.name]["num_of_machines"] = len(testv.tests)
+#         df_dict[version][testv.name]["average_score"] = running_total / len(testv.tests)
+#         if round(df_dict[version][testv.name]["average_score"]):
+#             df_dict[version][testv.name]["result"] = "passed"
+#         else:
+#             df_dict[version][testv.name]["result"] = "failed"
+
+dataset = []
+
+for version, test in condensed_tests.items():
+    current = dict()
+    current[test] = dict()
+    for testk, testv in test.items():
+        running_total = 0
+        for test_case in testv.tests:
+            if test_case[0] == "passed":
+                running_total += 1
+
+        current[testv.name]["num_of_machines"] = len(testv.tests)
+        current[testv.name]["average_score"] = running_total / len(testv.tests)
+        if round(current[testv.name]["average_score"]):
+            current[testv.name]["result"] = "passed"
+        else:
+            current[testv.name]["result"] = "failed"
+
+    dataset.append(current)
+
+print(dataset)
+
+print("*************************************")
+print("***Processing done, starting model***")
+print("*************************************")
 
 
-def loadResults(filename, testnum):
-    with open(filename, mode="r", encoding="utf-8") as csv_file:
-        csv_reader = csv.DictReader(csv_file)
-        line_count = 0
-        for row in csv_reader:
-            curr_row = {}
-            curr_row["child_result"] = row["child_result"]
-            if line_count == testnum:
-                result_lst.append(curr_row)
-            line_count += 1
-        print(f"Processed {line_count} lines.")
-
-
-def loadData(filename):
-    with open(filename, mode="r", encoding="utf-8") as csv_file:
-        # print(f"Current target: {filename}")
-        csv_reader = csv.DictReader(csv_file)
-        line_count = 0
-        curr_row = {}
-        filenames = []
-        for row in csv_reader:
-            filenames.append(row["Filename"])
-            curr_row["num_changes"] = row["total number of files changed for diff"]
-            line_count += 1
-        curr_row["Filename"] = filenames
-        data_lst.append(curr_row)
-        print(f"Processed {line_count} lines.")
-
-
-# Make these 2 lists equivalent in file names to ensure diffs and results line up
-file_names = loadFiles()
-file_names_test = loadFiles()
-
-for name in file_names:
-    loadData(name)
-
-for name in file_names_test:
-    loadResults(name, test_number)
-
-for iterator in range(len(data_lst)):
-    data_lst[iterator]["child_result"] = result_lst[iterator]["child_result"]
-
-dataset = pd.DataFrame(data_lst)
-
-test = data_lst[0]
-
+dataset = pd.DataFrame(df_dict)
 
 data = dataset.sample(frac=0.95, random_state=786)
 data_unseen = dataset.drop(data.index)
@@ -69,8 +85,22 @@ data_unseen.reset_index(inplace=True, drop=True)
 print("Data for Modeling: " + str(data.shape))
 print("Unseen Data For Predictions: " + str(data_unseen.shape))
 
-s = setup(data, target="child_result", numeric_features=["num_changes"])
-numeric_features = ["num_changes"]
+s = setup(
+    data,
+    target="result",
+    numeric_features=[
+        "total_change",
+        "total_add",
+        "total_del",
+        "total_fchange",
+        "file_change",
+        "file_add",
+        "file_del",
+        "average_score",
+        "num_of_machines",
+    ],
+    categorical_features=["result", "name", "extension"],
+)
 
 rf = create_model("rf", fold=3)
 print(rf)
