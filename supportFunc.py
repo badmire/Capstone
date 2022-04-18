@@ -24,6 +24,7 @@ def confidenceThreshold(prediction_list):
 def loadFiles(File_Type):
     # THIS FUNCTION NEEDS TO CHANGE TO ACCEPT A PATH W/O HUMAN INTERACTION
     # A command line argument perhaps?
+    # Ideally, it would point to a directory full of the stuff we need, and just let us run model.py /diffs/directory /tests/directory
     file_names = askopenfilenames(title=File_Type, filetypes=[("Data", ("*.csv"))])
     # print(file_names)
     return file_names
