@@ -81,12 +81,11 @@ def condenseTests(vM_dict):
     vM_dict == versionMatch() return value
 
     return:
-    {
-        diff_version: [
-            ["path/to/diff",[array/of/paths/to/tests]],
-            {test_name: TestStruct}
-        ]
-    }
+    dict with version # as keys
+    dict as values
+    values hold:
+    test name as key
+    test struct as value
     """
     output = dict()
 

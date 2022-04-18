@@ -24,59 +24,48 @@ print(f"number of diffs: {len(condensed_tests)}")
 # Load diffs/features
 diffs = loadDiffs(result)
 
-# Build final dict for data frame
-# df_dict = dict()
-# for version, values in diffs.items():  # Iterate through each version
-#     df_dict[version] = dict()
-#     for k, v in values.items():  # Load in features
-#         df_dict[version][k] = v
-
-#     for testk, testv in condensed_tests[version][
-#         1
-#     ].items():  # Iterate through each test
-#         # Calculate average pass/fail score
-#         running_total = 0
-#         for test_case in testv.tests:
-#             if test_case[0] == "passed":
-#                 running_total += 1
-
-#         df_dict[version][testv.name] = dict()
-
-#         df_dict[version][testv.name]["num_of_machines"] = len(testv.tests)
-#         df_dict[version][testv.name]["average_score"] = running_total / len(testv.tests)
-#         if round(df_dict[version][testv.name]["average_score"]):
-#             df_dict[version][testv.name]["result"] = "passed"
-#         else:
-#             df_dict[version][testv.name]["result"] = "failed"
-
-dataset = []
+final_set = dict()
+final_set["test_name"] = []
+final_set["result"] = []
+final_set["machine_num"] = []
+final_set["average_score"] = []
+final_set["version"] = []
+final_set["total_change"] = []
+final_set["total_add"] = []
+final_set["total_del"] = []
+final_set["total_fchange"] = []
 
 for version, test in condensed_tests.items():
-    current = dict()
-    current[test[0]] = dict()
-    for testk, testv in test.items():
+    for test_name, test_val in test.items():
+        final_set["test_name"].append(test_name)
+
+        # calculate average
         running_total = 0
-        for test_case in testv.tests:
+        for test_case in test_val.tests:
             if test_case[0] == "passed":
                 running_total += 1
 
-        current[testv.name]["num_of_machines"] = len(testv.tests)
-        current[testv.name]["average_score"] = running_total / len(testv.tests)
-        if round(current[testv.name]["average_score"]):
-            current[testv.name]["result"] = "passed"
+        final_set["machine_num"].append(len(test_val.tests))
+        final_set["average_score"].append(running_total / len(test_val.tests))
+
+        if round(running_total / len(test_val.tests)):
+            final_set["result"].append("passed")
         else:
-            current[testv.name]["result"] = "failed"
+            final_set["result"].append("failed")
 
-    dataset.append(current)
+        final_set["version"].append(version)
+        final_set["total_change"].append(diffs[version]["total_change"])
+        final_set["total_add"].append(diffs[version]["total_add"])
+        final_set["total_del"].append(diffs[version]["total_del"])
+        final_set["total_fchange"].append(diffs[version]["total_fchange"])
 
-print(dataset)
 
 print("*************************************")
 print("***Processing done, starting model***")
 print("*************************************")
 
 
-dataset = pd.DataFrame(df_dict)
+dataset = pd.DataFrame(final_set)
 
 data = dataset.sample(frac=0.95, random_state=786)
 data_unseen = dataset.drop(data.index)
@@ -92,14 +81,10 @@ s = setup(
         "total_change",
         "total_add",
         "total_del",
-        "total_fchange",
-        "file_change",
-        "file_add",
-        "file_del",
         "average_score",
-        "num_of_machines",
+        "machine_num",
+        "total_fchange",
     ],
-    categorical_features=["result", "name", "extension"],
 )
 
 rf = create_model("rf", fold=3)
@@ -112,6 +97,6 @@ predict_model(tuned_rf)
 
 plot_model(rf)
 
-# best = compare_models()
-# print(best)
-# plot_model(best, plot = 'auc')
+best = compare_models()
+print(best)
+plot_model(best, plot="auc")
