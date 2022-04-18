@@ -28,7 +28,7 @@ final_set = dict()
 final_set["test_name"] = []
 final_set["result"] = []
 final_set["machine_num"] = []
-final_set["average_score"] = []
+# final_set["average_score"] = []
 final_set["version"] = []
 final_set["total_change"] = []
 final_set["total_add"] = []
@@ -46,12 +46,14 @@ for version, test in condensed_tests.items():
                 running_total += 1
 
         final_set["machine_num"].append(len(test_val.tests))
-        final_set["average_score"].append(running_total / len(test_val.tests))
+        # final_set["average_score"].append(running_total / len(test_val.tests))
 
         if round(running_total / len(test_val.tests)):
-            final_set["result"].append("passed")
+            final_set["result"].append(1)
         else:
-            final_set["result"].append("failed")
+            final_set["result"].append(0)
+
+        # final_set["result"].append(test_val.tests[0][0])
 
         final_set["version"].append(version)
         final_set["total_change"].append(diffs[version]["total_change"])
@@ -81,7 +83,7 @@ s = setup(
         "total_change",
         "total_add",
         "total_del",
-        "average_score",
+        # "average_score",
         "machine_num",
         "total_fchange",
     ],
