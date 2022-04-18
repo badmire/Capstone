@@ -91,7 +91,7 @@ def condenseTests(vM_dict):
 
     lines_processed = 0
     for k, v in vM_dict.items():
-        output[k] = [v, dict()]
+        output[k] = dict()
         for test_csv in v[1]:
             with open(test_csv, "r", encoding="utf8") as csv_file:
                 current = csv.DictReader(csv_file)
@@ -107,16 +107,14 @@ def condenseTests(vM_dict):
 
                     if row["test_name"] not in output:
                         # create new
-                        output[k][1][row["test_name"]] = TestStruct(row["test_name"])
+                        output[k][row["test_name"]] = TestStruct(row["test_name"])
                     # update existing/give current values
                     if row["instrument_name"] is not None:
-                        output[k][1][row["test_name"]].tests.append(
+                        output[k][row["test_name"]].tests.append(
                             (row["result"], row["instrument_name"])
                         )
                     else:
-                        output[k][1][row["test_name"]].tests.append(
-                            (row["result"], None)
-                        )
+                        output[k][row["test_name"]].tests.append((row["result"], None))
             print(f"Lines processed: {lines_processed}")
     return output
 

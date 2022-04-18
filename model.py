@@ -53,7 +53,7 @@ dataset = []
 
 for version, test in condensed_tests.items():
     current = dict()
-    current[test] = dict()
+    current[test[0]] = dict()
     for testk, testv in test.items():
         running_total = 0
         for test_case in testv.tests:
