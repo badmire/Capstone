@@ -33,6 +33,7 @@ def loadFiles(File_Type):
 def versionMatch():
     """
     Take in path to a directory for diffs, and one for tests, return dictionary with diffs matched to test sets.
+    {diff vers: [diff vers path, [test paths,test paths]]}
 
     """
     diffs = loadFiles("Diff csvs")
@@ -180,25 +181,25 @@ if __name__ == "__main__":
     #         print(i, j)
 
     # ***Output pass/fail info***
-    # condensed_tests = condenseTests(result)
+    condensed_tests = condenseTests(result)
 
     # print(f"number of tests: {len(condensed_tests)}")
 
-    # for diffk, diffv in condensed_tests.items():
-    #     pass_count = 0
-    #     fail_count = 0
-    #     weird = 0
-    #     for testk, testv in diffv[1].items():
-    #         for test_case in testv.tests:
-    #             if test_case[0] == "passed":
-    #                 # test_case[0] == "SUCCESS":
-    #                 pass_count += 1
-    #             elif test_case[0] == "failed":
-    #                 # test_case[0] == "FAILURE":
-    #                 fail_count += 1
-    #             else:
-    #                 print(test_case[0])
-    #     print(f"{diffk}: passed: {pass_count}, failed: {fail_count}")
+    for diffk, diffv in condensed_tests.items():
+        pass_count = 0
+        fail_count = 0
+        weird = 0
+        for testk, testv in diffv.items():
+            for test_case in testv.tests:
+                if test_case[0] == "passed":
+                    # test_case[0] == "SUCCESS":
+                    pass_count += 1
+                elif test_case[0] == "failed":
+                    # test_case[0] == "FAILURE":
+                    fail_count += 1
+                else:
+                    print(test_case[0])
+        print(f"{diffk}: passed: {pass_count}, failed: {fail_count}")
 
     # # Informal test for confidenceThreshold
     # test_list = []
