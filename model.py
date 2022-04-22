@@ -17,50 +17,16 @@ from supportFunc import *
 result = versionMatch()
 
 # Load tests and condense them into TestStruct class
-condensed_tests = condenseTests(result)
-
-print(f"number of diffs: {len(condensed_tests)}")
+tests = readTests(result)
 
 # Load diffs/features
 diffs = loadDiffs(result)
 
-final_set = dict()
-final_set["test_name"] = []
-final_set["result"] = []
-final_set["machine_num"] = []  # number of machines run on
-# final_set["average_score"] = []
-final_set["version"] = []
-final_set["total_change"] = []
-final_set["total_add"] = []
-final_set["total_del"] = []
-final_set["total_fchange"] = []
+numerical_tags = ["total_change", "total_add", "total_del", "total_fchange"]
 
-for version, test in condensed_tests.items():
-    for test_name, test_val in test.items():
-        final_set["test_name"].append(test_name)
+categorical_tags = []
 
-        # calculate average
-        running_total = 0
-        for test_case in test_val.tests:
-            if test_case[0] == "passed":
-                running_total += 1
-
-        final_set["machine_num"].append(len(test_val.tests))
-        # final_set["average_score"].append(running_total / len(test_val.tests))
-
-        if round(running_total / len(test_val.tests)):
-            final_set["result"].append(1)
-        else:
-            final_set["result"].append(0)
-
-        # final_set["result"].append(test_val.tests[0][0])
-
-        final_set["version"].append(version)
-        final_set["total_change"].append(diffs[version]["total_change"])
-        final_set["total_add"].append(diffs[version]["total_add"])
-        final_set["total_del"].append(diffs[version]["total_del"])
-        final_set["total_fchange"].append(diffs[version]["total_fchange"])
-
+final_set = tableCreate(numerical_tags + categorical_tags, tests, diffs)
 
 print("*************************************")
 print("***Processing done, starting model***")
@@ -79,14 +45,9 @@ print("Unseen Data For Predictions: " + str(data_unseen.shape))
 s = setup(
     data,
     target="result",
-    numeric_features=[
-        "total_change",
-        "total_add",
-        "total_del",
-        # "average_score",
-        "machine_num",
-        "total_fchange",
-    ],
+    numeric_features=numerical_tags,
+    categorical_features=categorical_tags,
+    silent=True,
 )
 
 rf = create_model("rf", fold=3)
