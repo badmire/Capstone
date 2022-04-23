@@ -56,16 +56,25 @@ s = setup(
     silent=True,
 )
 
-rf = create_model("rf", fold=3)
-print(rf)
+# Create Logitic regression model
+lr = create_model("lr")
 
-tuned_rf = tune_model(rf, fold=3)
-print(tuned_rf)
+# Display AUC accuracy curves
+# plot_model(lr)
 
-predict_model(tuned_rf)
+# ****************************
+# Save the model "lr" here:
+# ****************************
 
-plot_model(rf)
 
-best = compare_models()
-print(best)
-plot_model(best, plot="auc")
+# ****************************
+# Code that takes a while to load but eventually want to use for higher accuracy:
+# ****************************
+
+# tuned_lr = tune_model(lr)
+# predictions = predict_model(tuned_lr)
+# plot_model(tuned_lr)
+# evaluate_model(tuned_lr)
+# final_lr = finalize_model(tuned_lr)
+# print(final_lr)
+# plot_model(final_lr)
