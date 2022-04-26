@@ -3,9 +3,9 @@ from multiprocessing.sharedctypes import Value
 import random
 import re
 import csv
-#from tkinter.filedialog import askopenfilenames
 import time
 import glob
+import os
 
 
 def tableCreate(tags, tests, diffs):
@@ -77,11 +77,14 @@ def loadFiles(File_Type):
     #file_names = askopenfilenames(title=File_Type, filetypes=[("Data", ("*.csv"))])
 
     if File_Type == "Diff csvs":
-        file_names = [file for file in glob.glob("diffs/*.csv")]
+        os.chdir(os.getcwd() + "/diffs")
+        file_names = [file for file in glob.glob("*.csv")]
     if File_Type == "Test csvs":
-        file_names = [file for file in glob.glob("tests/*.csv")]
+        os.chdir(os.getcwd() + "/tests")
+        file_names = [file for file in glob.glob("*.csv")]
 
-    # print(file_names)
+    os.chdir("..")
+    #print(file_names)
     return file_names
 
 
@@ -136,7 +139,7 @@ def readTests(vM_dict):
     for k, v in vM_dict.items():
         output[k] = dict()
         for test_csv in v[1]:
-            with open(test_csv, "r", encoding="utf8") as csv_file:
+            with open(os.getcwd() + "/tests/" + test_csv, "r", encoding="utf8") as csv_file:
                 current = csv.DictReader(csv_file)
                 for row in current:
                     lines_processed += 1
