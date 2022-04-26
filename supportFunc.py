@@ -1,9 +1,11 @@
+from msilib.schema import File
 from multiprocessing.sharedctypes import Value
 import random
 import re
 import csv
-from tkinter.filedialog import askopenfilenames
+#from tkinter.filedialog import askopenfilenames
 import time
+import glob
 
 
 def tableCreate(tags, tests, diffs):
@@ -72,7 +74,13 @@ def loadFiles(File_Type):
     # THIS FUNCTION NEEDS TO CHANGE TO ACCEPT A PATH W/O HUMAN INTERACTION
     # A command line argument perhaps?
     # Ideally, it would point to a directory full of the stuff we need, and just let us run model.py /diffs/directory /tests/directory
-    file_names = askopenfilenames(title=File_Type, filetypes=[("Data", ("*.csv"))])
+    #file_names = askopenfilenames(title=File_Type, filetypes=[("Data", ("*.csv"))])
+
+    if File_Type == "Diff csvs":
+        file_names = [file for file in glob.glob("diffs/*.csv")]
+    if File_Type == "Test csvs":
+        file_names = [file for file in glob.glob("tests/*.csv")]
+
     # print(file_names)
     return file_names
 
