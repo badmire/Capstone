@@ -1,6 +1,3 @@
-from msilib.schema import File
-from multiprocessing.sharedctypes import Value
-import random
 import re
 import csv
 import time
@@ -24,6 +21,11 @@ def tableCreate(tags, tests, diffs):
     output["test_name"] = []
     output["result"] = []
     output["version"] = []
+
+    # Conditional values
+    historic = dict()
+    if "historic" in tags:
+        historic = historicRecord(tests)
 
     # Build columns
     for tag in tags:
@@ -51,6 +53,47 @@ def tableCreate(tags, tests, diffs):
 
             # *** Nested value logic goes here ***
 
+            # Historic pass/fail average
+            if "historic" in tags:
+                output["historic"] = historic[test]
+
+    return output
+
+
+def historicRecord(tests):
+    """Take in dict of tests of the format from the readTests() function, for each test calculate historic fail rate, return dict.
+
+    Calculates historic pass/fail rate over all tests results.
+
+    Output dict has keys of each testname, and value of the fail rate
+    """
+    output = dict()
+
+    for version in tests:
+        for test in tests[version]:
+            if test in output:  # Add pass/fail to output under test heading.
+                if test[version][test]["result"] == "pass":
+                    output[test].append(1)
+                else:
+                    output[test].append(0)
+            else:  # Creat new entry in output for the test
+                if test[version][test]["result"] == "pass":
+                    output[test] = [1]
+                else:
+                    output[test] = [0]
+
+    # Build averages and output
+    for k, v in output.items():
+        tmp = 0
+        for value in v:
+            tmp += value
+
+        # Calculate average
+        tmp = tmp / len(v)
+
+        # Overwrite output
+        output[k] = tmp
+
     return output
 
 
@@ -74,7 +117,7 @@ def loadFiles(File_Type):
     # THIS FUNCTION NEEDS TO CHANGE TO ACCEPT A PATH W/O HUMAN INTERACTION
     # A command line argument perhaps?
     # Ideally, it would point to a directory full of the stuff we need, and just let us run model.py /diffs/directory /tests/directory
-    #file_names = askopenfilenames(title=File_Type, filetypes=[("Data", ("*.csv"))])
+    # file_names = askopenfilenames(title=File_Type, filetypes=[("Data", ("*.csv"))])
 
     if File_Type == "Diff csvs":
         os.chdir(os.getcwd() + "/diffs")
@@ -84,7 +127,7 @@ def loadFiles(File_Type):
         file_names = [file for file in glob.glob("*.csv")]
 
     os.chdir("..")
-    #print(file_names)
+    # print(file_names)
     return file_names
 
 
@@ -139,7 +182,9 @@ def readTests(vM_dict):
     for k, v in vM_dict.items():
         output[k] = dict()
         for test_csv in v[1]:
-            with open(os.getcwd() + "/tests/" + test_csv, "r", encoding="utf8") as csv_file:
+            with open(
+                os.getcwd() + "/tests/" + test_csv, "r", encoding="utf8"
+            ) as csv_file:
                 current = csv.DictReader(csv_file)
                 for row in current:
                     lines_processed += 1
@@ -273,61 +318,14 @@ def condenseTests(vM_dict):
 
 
 if __name__ == "__main__":
-    # Informal test for versionMatch
-    # diffs_paths = askopenfilenames(title="Select file", filetypes=[("Data", ("*.csv"))])
-    # test_paths = askopenfilenames(title="Select file", filetypes=[("Data", ("*.csv"))])
+    # Informal test for historical
 
-    result = versionMatch()
+    files = versionMatch()
 
-    tests = readTests(result)
+    diffs = loadDiffs(files)
+    tests = readTests(files)
 
-    for k, v in tests.items():
-        print("Version: ", k)
-        for test, value in v.items():
-            print("    ", test)
-            for tkey, tvalue in value.items():
-                print(f"        {tkey}: {tvalue}")
+    output = tableCreate(["historical"], tests, diffs)
 
-    # diffs = dict()
-
-    # for k, v in result.items():
-    #     diffs[k] = loadDiffs(v[0])
-
-    # # for k, v in diffs.items():
-    # #     print(f"{k}:")
-    # #     for i, j in v.items():
-    # #         print(i, j)
-
-    # # ***Output pass/fail info***
-    # condensed_tests = condenseTests(result)
-
-    # # print(f"number of tests: {len(condensed_tests)}")
-
-    # for diffk, diffv in condensed_tests.items():
-    #     pass_count = 0
-    #     fail_count = 0
-    #     weird = 0
-    #     for testk, testv in diffv.items():
-    #         for test_case in testv.tests:
-    #             if test_case[0] == "passed":
-    #                 # test_case[0] == "SUCCESS":
-    #                 pass_count += 1
-    #             elif test_case[0] == "failed":
-    #                 # test_case[0] == "FAILURE":
-    #                 fail_count += 1
-    #             else:
-    #                 print(test_case[0])
-    #     print(f"{diffk}: passed: {pass_count}, failed: {fail_count}")
-
-    # # # Informal test for confidenceThreshold
-    # # test_list = []
-    # # for i in range(50):
-    # #     test_list.append(
-    #         {
-    #             "prediction": "SUCCESS" if random.randint(0, 1) else "FAILURE",
-    #             "confidence": random.random(),
-    #         }
-    #     )
-    # result = confidenceThreshold(test_list)
-    # for thing in result:
-    #     print(thing)
+    for k, v in output.items():
+        print(k, v)

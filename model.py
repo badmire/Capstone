@@ -3,9 +3,7 @@
 # 2. Setup data into test and training set
 # 3. Create Model based on data
 # 4. Add additional CSV's and associate correctly
-from html.entities import name2codepoint
 from pycaret.classification import *
-import csv
 import pandas as pd
 from supportFunc import *
 
@@ -27,6 +25,8 @@ diffs = loadDiffs(result)
 # "total_change", "total_add", "total_del", "total_fchange"
 # From tests:
 # "child_link","parent_test_chain","child_result","parent_link","parent_start_date","sw_version","result","run_time","error_message","instrument_name","instrument_git_hash","run_date","collection_date","dut_console_log","is_system_test","connection_type","visa_name","test_git_hash","ptf_git_hash","test_log_file","test_name","test_requirements","test_description","scenario_number","expected_skipped_models","linked_issues_snapshot","seed"
+# Misc:
+# "historic"
 
 numerical_tags = ["total_change", "total_add", "total_del", "total_fchange"]
 
