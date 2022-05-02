@@ -22,7 +22,7 @@ diffs = loadDiffs(result)
 
 # Currently possible tags:
 # From diffs:
-# "total_change", "total_add", "total_del", "total_fchange"
+# "total_change", "total_add", "total_del", "total_fchange","fchange"
 # From tests:
 # "child_link","parent_test_chain","child_result","parent_link","parent_start_date","sw_version","result","run_time","error_message","instrument_name","instrument_git_hash","run_date","collection_date","dut_console_log","is_system_test","connection_type","visa_name","test_git_hash","ptf_git_hash","test_log_file","test_name","test_requirements","test_description","scenario_number","expected_skipped_models","linked_issues_snapshot","seed"
 # Misc:

@@ -57,11 +57,6 @@ def tableCreate(tags, tests, diffs):
                     output[tag].append(diffs[version][tag])
                 elif tag in tests[version][test]:
                     output[tag].append(tests[version][test][tag])
-                else:
-                    print("Critical error, field not found")
-                    quit()
-
-            # *** Nested value logic goes here ***
 
             # Historic pass/fail average
             if "historic" in tags:
@@ -271,7 +266,7 @@ def loadDiffs(vM_dict):
 
     for k, v in vM_dict.items():
         current = dict()
-        with open(v[0], "r", encoding="utf8") as target:
+        with open(os.getcwd() + "/diffs/" + v[0], "r", encoding="utf8") as target:
             diff = csv.DictReader(target)
             file_changes = []
 
