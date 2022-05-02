@@ -22,17 +22,33 @@ diffs = loadDiffs(result)
 
 # Currently possible tags:
 # From diffs:
-# "total_change", "total_add", "total_del", "total_fchange","fchange"
+# "total_change", "total_add", "total_del", "total_fchange",
 # From tests:
 # "child_link","parent_test_chain","child_result","parent_link","parent_start_date","sw_version","result","run_time","error_message","instrument_name","instrument_git_hash","run_date","collection_date","dut_console_log","is_system_test","connection_type","visa_name","test_git_hash","ptf_git_hash","test_log_file","test_name","test_requirements","test_description","scenario_number","expected_skipped_models","linked_issues_snapshot","seed"
 # Misc:
 # "historic"
 
+# Special:
+# "fchange"
+
 numerical_tags = ["total_change", "total_add", "total_del", "total_fchange"]
 
 categorical_tags = []
 
-final_set = tableCreate(numerical_tags + categorical_tags, tests, diffs)
+# For tags that produce more columns or have special logic
+special_tags = ["fchange"]
+
+final_set = tableCreate(numerical_tags + categorical_tags + special_tags, tests, diffs)
+
+# Adjust which columns to include here
+if "fchange" in special_tags:
+    file_names = fileChange(diffs)
+    for file in file_names:
+        numerical_tags.append(f"{file}_change")
+        numerical_tags.append(f"{file}_del")
+        numerical_tags.append(f"{file}_add")
+        categorical_tags.append(f"{file}_name")
+        categorical_tags.append(f"{file}_extension")
 
 print("*************************************")
 print("***Processing done, starting model***")
@@ -60,7 +76,7 @@ s = setup(
 lr = create_model("lr")
 
 # Display AUC accuracy curves
-# plot_model(lr)
+plot_model(lr)
 
 # ****************************
 # Save the model "lr" here:
