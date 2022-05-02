@@ -3,6 +3,7 @@ import csv
 import time
 import glob
 import os
+from unicodedata import name
 
 
 def tableCreate(tags, tests, diffs):
@@ -27,19 +28,21 @@ def tableCreate(tags, tests, diffs):
     if "historic" in tags:
         historic = historicRecord(tests)
 
-    fchanges = []
-    if "fchanges" in tags:
-        file_names = fileChange(diffs, tests)
+    file_names = []
+    if "fchange" in tags:
+        file_names = fileChange(diffs)
         for file in file_names:
             output[f"{file}_name"] = []
             output[f"{file}_extension"] = []
             output[f"{file}_change"] = []
             output[f"{file}_del"] = []
-            output[f"{file}_del"] = []
+            output[f"{file}_add"] = []
 
     # Build columns
     for tag in tags:
         if tag not in output:
+            if tag == "historic" or tag == "fchange":
+                continue
             output[tag] = []
 
     # Build rows
@@ -57,33 +60,29 @@ def tableCreate(tags, tests, diffs):
                     output[tag].append(diffs[version][tag])
                 elif tag in tests[version][test]:
                     output[tag].append(tests[version][test][tag])
-
-            # Historic pass/fail average
-            if "historic" in tags:
-                output["historic"] = historic[test]
-
-            # Add changed files as features
-            if "fchanges" in tags:
-                for file in diffs[version]["files"]:
-                    for name in file_names:
-                        if name == file["name"]:
-                            output[f"{name}_name"].append(1)
-                            output[f"{name}_extension"].append(1)
-                            output[f"{name}_change"].append(
-                                diffs[version]["files"]["file_change"]
+                if tag == "historic":
+                    output["historic"] = historic[test]
+                # Add changed files as features
+                if tag == "fchange":
+                    for file in file_names:
+                        try:
+                            output[f"{file}_change"].append(
+                                diffs[version]["files"][file]["file_change"]
                             )
-                            output[f"{name}_del"].append(
-                                diffs[version]["files"]["file_delete"]
+                            output[f"{file}_del"].append(
+                                diffs[version]["files"][file]["file_del"]
                             )
-                            output[f"{name}_add"].append(
-                                diffs[version]["files"]["file_add"]
+                            output[f"{file}_add"].append(
+                                diffs[version]["files"][file]["file_add"]
                             )
-                        else:
-                            output[f"{name}_name"].append(0)
-                            output[f"{name}_extension"].append("N/A")
-                            output[f"{name}_change"].append(0)
-                            output[f"{name}_del"].append(0)
-                            output[f"{name}_add"].append(0)
+                            output[f"{file}_name"].append(1)
+                            output[f"{file}_extension"].append(1)
+                        except:
+                            output[f"{file}_name"].append(0)
+                            output[f"{file}_extension"].append("N/A")
+                            output[f"{file}_change"].append(0)
+                            output[f"{file}_del"].append(0)
+                            output[f"{file}_add"].append(0)
 
     return output
 
@@ -92,9 +91,9 @@ def fileChange(diffs):
     """Take in array of diff dicts, return list of all changed files in given diffs"""
     output = []
     for version in diffs:
-        for file in diffs[version]["files"]:
-            if file["name"] not in output:
-                output.append(file["name"])
+        for k, v in diffs[version]["files"].items():
+            if v["name"] not in output:
+                output.append(v["name"])
     return output
 
 
@@ -283,7 +282,10 @@ def loadDiffs(vM_dict):
                 current_file["file_del"] = row["total deletions for file"]
                 file_changes.append(current_file)
 
-            current["files"] = file_changes
+            current["files"] = dict()
+            for file in file_changes:
+                current["files"][file["name"]] = file
+
             output[k] = current
 
     return output
@@ -366,4 +368,4 @@ if __name__ == "__main__":
     output = tableCreate(["fchange"], tests, diffs)
 
     for k, v in output.items():
-        print(k, v)
+        print(k, len(v))
