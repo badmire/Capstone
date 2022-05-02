@@ -3,7 +3,6 @@ import csv
 import time
 import glob
 import os
-from unicodedata import name
 
 
 def tableCreate(tags, tests, diffs):
@@ -65,7 +64,7 @@ def tableCreate(tags, tests, diffs):
                 # Add changed files as features
                 if tag == "fchange":
                     for file in file_names:
-                        try:
+                        if file in diffs[version]["files"]:
                             output[f"{file}_change"].append(
                                 diffs[version]["files"][file]["file_change"]
                             )
@@ -77,7 +76,7 @@ def tableCreate(tags, tests, diffs):
                             )
                             output[f"{file}_name"].append(1)
                             output[f"{file}_extension"].append(1)
-                        except:
+                        else:
                             output[f"{file}_name"].append(0)
                             output[f"{file}_extension"].append("N/A")
                             output[f"{file}_change"].append(0)
@@ -91,9 +90,10 @@ def fileChange(diffs):
     """Take in array of diff dicts, return list of all changed files in given diffs"""
     output = []
     for version in diffs:
-        for k, v in diffs[version]["files"].items():
-            if v["name"] not in output:
-                output.append(v["name"])
+        for file in diffs[version]["files"]:
+            if file not in output:
+                output.append(file)
+
     return output
 
 
