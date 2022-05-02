@@ -27,6 +27,16 @@ def tableCreate(tags, tests, diffs):
     if "historic" in tags:
         historic = historicRecord(tests)
 
+    fchanges = []
+    if "fchanges" in tags:
+        file_names = fileChange(diffs, tests)
+        for file in file_names:
+            output[f"{file}_name"] = []
+            output[f"{file}_extension"] = []
+            output[f"{file}_change"] = []
+            output[f"{file}_del"] = []
+            output[f"{file}_del"] = []
+
     # Build columns
     for tag in tags:
         if tag not in output:
@@ -57,6 +67,39 @@ def tableCreate(tags, tests, diffs):
             if "historic" in tags:
                 output["historic"] = historic[test]
 
+            # Add changed files as features
+            if "fchanges" in tags:
+                for file in diffs[version]["files"]:
+                    for name in file_names:
+                        if name == file["name"]:
+                            output[f"{name}_name"].append(1)
+                            output[f"{name}_extension"].append(1)
+                            output[f"{name}_change"].append(
+                                diffs[version]["files"]["file_change"]
+                            )
+                            output[f"{name}_del"].append(
+                                diffs[version]["files"]["file_delete"]
+                            )
+                            output[f"{name}_add"].append(
+                                diffs[version]["files"]["file_add"]
+                            )
+                        else:
+                            output[f"{name}_name"].append(0)
+                            output[f"{name}_extension"].append("N/A")
+                            output[f"{name}_change"].append(0)
+                            output[f"{name}_del"].append(0)
+                            output[f"{name}_add"].append(0)
+
+    return output
+
+
+def fileChange(diffs):
+    """Take in array of diff dicts, return list of all changed files in given diffs"""
+    output = []
+    for version in diffs:
+        for file in diffs[version]["files"]:
+            if file["name"] not in output:
+                output.append(file["name"])
     return output
 
 
@@ -325,7 +368,7 @@ if __name__ == "__main__":
     diffs = loadDiffs(files)
     tests = readTests(files)
 
-    output = tableCreate(["historical"], tests, diffs)
+    output = tableCreate(["fchange"], tests, diffs)
 
     for k, v in output.items():
         print(k, v)
