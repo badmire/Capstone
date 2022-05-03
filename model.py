@@ -38,7 +38,8 @@ categorical_tags = []
 # For tags that produce more columns or have special logic
 special_tags = ["fchange"]
 
-final_set = tableCreate(numerical_tags + categorical_tags + special_tags, tests, diffs)
+final_set = tableCreate(
+    numerical_tags + categorical_tags + special_tags, tests, diffs)
 
 # Adjust which columns to include here
 if "fchange" in special_tags:
@@ -70,13 +71,14 @@ s = setup(
     numeric_features=numerical_tags,
     categorical_features=categorical_tags,
     silent=True,
+    remove_perfect_collinearity=False
 )
 
 # Create Logitic regression model
-lr = create_model("lr")
+dt = create_model("dt")
 
 # Display AUC accuracy curves
-plot_model(lr)
+plot_model(dt)
 
 # ****************************
 # Save the model "lr" here:
@@ -86,6 +88,17 @@ plot_model(lr)
 # ****************************
 # Code that takes a while to load but eventually want to use for higher accuracy:
 # ****************************
+
+# best = compare_models()
+# print(best)
+# boosted_dt = ensemble_model(dt, method = 'Bagging')
+# predictions = predict_model(boosted_dt)
+# predictions.head()
+# plot_model(boosted_dt)
+# evaluate_model(boosted_dt)
+# unseen_predictions = predict_model(boosted_dt, data=data_unseen)
+# unseen_predictions.head()
+# predictions.to_csv("newpredictions.csv")
 
 # tuned_lr = tune_model(lr)
 # predictions = predict_model(tuned_lr)
