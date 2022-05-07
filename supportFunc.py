@@ -162,6 +162,9 @@ def loadFiles(File_Type):
     if File_Type == "Test csvs":
         os.chdir(os.getcwd() + "/tests")
         file_names = [file for file in glob.glob("*.csv")]
+    if File_Type == "Models":
+        os.chdir(os.getcwd() + "/models")
+        file_names = [file for file in glob.glob("*.pkl")]
 
     os.chdir("..")
     # print(file_names)
