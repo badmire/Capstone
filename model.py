@@ -7,6 +7,21 @@ from pycaret.classification import *
 import pandas as pd
 from supportFunc import *
 
+
+if (len(sys.argv) != 2):
+    print("Please add the following command line option: ")
+    print("0: Train (Create a new model)")
+    print("1: Predict (Use old model to predict test outcomes)")
+    sys.exit
+
+newModel = False
+
+if (sys.argv[1] == 1):
+    newModel = False
+elif (sys.argv[1] == 0):
+    newModel = True
+    
+
 # ****************************
 # **Brandon Fuck-around zone**
 # ****************************
@@ -75,7 +90,18 @@ s = setup(
 )
 
 # Create Logitic regression model
-dt = create_model("dt")
+if (newModel == True):
+    lr = create_model("lr")
+# Else load an existing model
+else:
+    model_names = loadFiles(Models)
+    for model in model_names:
+        print(model)
+    os.chdir(os.getcwd() + "/models")
+    print("Please enter model name: ")
+    load_model_name = input()
+    lr = load_model(load_model_name)
+    os.chdir("..")
 
 # Display AUC accuracy curves
 plot_model(dt)
@@ -83,7 +109,12 @@ plot_model(dt)
 # ****************************
 # Save the model "lr" here:
 # ****************************
-
+if (newModel == True):
+    os.chdir(os.getcwd() + "/models")
+    print("Please enter model name: ")
+    model_name = input()
+    save_model(lr, model_name)
+    os.chdir("..")
 
 # ****************************
 # Code that takes a while to load but eventually want to use for higher accuracy:
