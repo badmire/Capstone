@@ -21,6 +21,9 @@ if (sys.argv[1] == 1):
 elif (sys.argv[1] == 0):
     newModel = True
     
+# Create the models folder if it doesn't exist
+if not os.path.exists(os.cwd()+"/models"):
+    os.mkdir(os.cwd()+"/models")
 
 # ****************************
 # **Brandon Fuck-around zone**
