@@ -78,7 +78,7 @@ s = setup(
 dt = create_model("dt")
 
 # Display AUC accuracy curves
-plot_model(dt)
+plot_model(dt, save=True)
 
 # ****************************
 # Save the model "lr" here:
@@ -106,4 +106,4 @@ plot_model(dt)
 # evaluate_model(tuned_lr)
 # final_lr = finalize_model(tuned_lr)
 # print(final_lr)
-# plot_model(final_lr)
+# plot_model(final_lr,save=True)

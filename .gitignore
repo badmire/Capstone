@@ -8,3 +8,7 @@ pyvenv.cfg
 test_out.csv
 /python=~
 /__pycache__
+/myenv/
+.vscode/
+*.png
+*.yml
