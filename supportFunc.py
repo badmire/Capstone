@@ -206,14 +206,16 @@ def readTests(vM_dict):
     Skipping untested/skipped tests coupled with indexing tests by scenario number yields no duplicate
     tests in a given version at this time.
 
-    ***Refactored condenseTests***
-
     Output will be a dictionary.
     Each key will be the version number, and each value will be a dictionary.
     Each key will be a test number, each value will be a dictionary
     Each key will be a coulumn name, each value will be the value from the csv.
     """
     output = dict()
+
+    # Record keeping for injested tests.
+    test_lib_file = open("./test_lib.txt","w+")
+    test_lib = test_lib_file.readlines()
 
     lines_processed = 0
     for k, v in vM_dict.items():
@@ -233,6 +235,9 @@ def readTests(vM_dict):
                         not in output[k]
                     ):
                         output[k][row["test_name"]] = dict()
+
+                        # Keep a running list of all tests in database for long term use
+                        test_lib = list(set(test_lib + [row["test_name"]]))
                     else:
                         log_err(
                             f"Error, duplicate: {row['test_name']} already in use. Version {k}, {test_csv}",
@@ -242,6 +247,11 @@ def readTests(vM_dict):
                     for title, value in row.items():
                         output[k][row["test_name"]][title] = value
         print(f"Lines processed: {lines_processed}")
+
+    # Write test library for later use
+    test_lib_file.write(line + '\n' for line in test_lib)
+    test_lib_file.close()
+
     return output
 
 
@@ -291,71 +301,6 @@ def loadDiffs(vM_dict):
     return output
 
 
-class TestStruct:
-    # ***Depriciated, use readTests()***
-    def __init__(self, name):
-        self.name = name
-        self.current_score = -1
-        # Array of tuples, one with result, one with machine, if any.
-        self.tests = []
-        # Historical pass fail rate, dummy value for now
-        self.historical = 0.5
-
-    def __eq__(self, other):
-        if self.name == other:
-            return True
-        else:
-            return False
-
-    def __repr__(self):
-        return f"TestStruct: {self.name}"
-
-
-def condenseTests(vM_dict):
-    """
-    Take in matched set from versionMatch(), load into TestStruct for averaging
-    ***Depriciated, use readTests()***
-
-    vM_dict == versionMatch() return value
-
-    return:
-    dict with version # as keys
-    dict as values
-    values hold:
-    test name as key
-    test struct as value
-    """
-    output = dict()
-
-    lines_processed = 0
-    for k, v in vM_dict.items():
-        output[k] = dict()
-        for test_csv in v[1]:
-            with open(test_csv, "r", encoding="utf8") as csv_file:
-                current = csv.DictReader(csv_file)
-                for row in current:
-                    lines_processed += 1
-                    if (
-                        row["result"] == "skipped"
-                        or row["result"] == "untested"
-                        # row["result"]
-                        # == "ABORTED"
-                    ):  # Don't let skipped test effect weight
-                        continue
-
-                    if row["test_name"] not in output:
-                        # create new
-                        output[k][row["test_name"]] = TestStruct(row["test_name"])
-                    # update existing/give current values
-                    if row["instrument_name"] is not None:
-                        output[k][row["test_name"]].tests.append(
-                            (row["result"], row["instrument_name"])
-                        )
-                    else:
-                        output[k][row["test_name"]].tests.append((row["result"], None))
-            print(f"Lines processed: {lines_processed}")
-    return output
-
 
 if __name__ == "__main__":
     # Informal test for historical
@@ -366,6 +311,3 @@ if __name__ == "__main__":
     tests = readTests(files)
 
     output = tableCreate(["fchange"], tests, diffs)
-
-    for k, v in output.items():
-        print(k, len(v))

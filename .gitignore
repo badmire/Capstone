@@ -1,0 +1,10 @@
+/bin
+/diffs
+/lib
+/_pycache_
+/tests
+logs.log
+pyvenv.cfg
+test_out.csv
+/python=~
+/__pycache__
