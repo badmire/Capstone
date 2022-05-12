@@ -5,7 +5,9 @@
 # 4. Add additional CSV's and associate correctly
 from pycaret.classification import *
 import pandas as pd
+import sys
 from supportFunc import *
+from datetime import datetime
 
 
 if (len(sys.argv) != 2):
@@ -14,16 +16,38 @@ if (len(sys.argv) != 2):
     print("1: Predict (Use old model to predict test outcomes)")
     sys.exit
 
+
 newModel = False
 
-if (sys.argv[1] == 1):
+if (sys.argv[1] == '1'):
     newModel = False
-elif (sys.argv[1] == 0):
+elif (sys.argv[1] == '0'):
     newModel = True
     
 # Create the models folder if it doesn't exist
-if not os.path.exists(os.cwd()+"/models"):
-    os.mkdir(os.cwd()+"/models")
+if not os.path.exists(os.getcwd()+"/models"):
+    os.mkdir(os.getcwd()+"/models")
+
+# Create the predictions folder if it doesn't exit
+if not os.path.exists(os.getcwd()+"/predictions"):
+    os.mkdir(os.getcwd()+"/predictions")
+
+if newModel == False:
+    model_names = loadFiles("Models")
+    print("\n")
+    print("\n")
+    print("\n")
+    print("Found ", len(model_names), " models: ")
+    for model in model_names:
+        print(model)
+    os.chdir(os.getcwd() + "/models")
+    print("Please enter the name of the model to be loaded: ")
+    load_model_name = input()
+    if ".pkl" in load_model_name:
+       load_model_name = load_model_name.replace('.pkl', '')
+    lr = load_model(load_model_name)
+    os.chdir("..")
+
 
 # ****************************
 # **Brandon Fuck-around zone**
@@ -95,49 +119,32 @@ s = setup(
 # Create Logitic regression model
 if (newModel == True):
     lr = create_model("lr")
-# Else load an existing model
-else:
-    model_names = loadFiles(Models)
-    for model in model_names:
-        print(model)
-    os.chdir(os.getcwd() + "/models")
-    print("Please enter model name: ")
-    load_model_name = input()
-    lr = load_model(load_model_name)
-    os.chdir("..")
-
-# Display AUC accuracy curves
-plot_model(dt)
+# Else we have already loaded a model into the lr variable
 
 # ****************************
-# Save the model "lr" here:
+# Tune and then save the model "lr" here:
 # ****************************
 if (newModel == True):
+    print("Tuning the new model...")
+    lr = tune_model(lr)
+    print("Sucessfully tuned model.")
     os.chdir(os.getcwd() + "/models")
-    print("Please enter model name: ")
+    print("Please enter the name of the model to be saved: ")
     model_name = input()
     save_model(lr, model_name)
     os.chdir("..")
 
-# ****************************
-# Code that takes a while to load but eventually want to use for higher accuracy:
-# ****************************
 
-# best = compare_models()
-# print(best)
-# boosted_dt = ensemble_model(dt, method = 'Bagging')
-# predictions = predict_model(boosted_dt)
-# predictions.head()
-# plot_model(boosted_dt)
-# evaluate_model(boosted_dt)
-# unseen_predictions = predict_model(boosted_dt, data=data_unseen)
-# unseen_predictions.head()
-# predictions.to_csv("newpredictions.csv")
+# Predict 
+predictions = predict_model(lr,data=data_unseen)
+os.chdir(os.getcwd()+"/predictions")
+now = datetime.now()
+dateString = str(now)
+dateString = dateString[:16]
+dateString = dateString.replace(':', '-')
+predictionName = dateString+".csv"
+print(predictionName)
+predictions.to_csv(dateString+".csv")
+os.chdir("..")
 
-# tuned_lr = tune_model(lr)
-# predictions = predict_model(tuned_lr)
-# plot_model(tuned_lr)
-# evaluate_model(tuned_lr)
-# final_lr = finalize_model(tuned_lr)
-# print(final_lr)
-# plot_model(final_lr)
+
