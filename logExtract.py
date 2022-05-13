@@ -1,4 +1,3 @@
-from cgi import test
 import csv
 import sys
 import os
