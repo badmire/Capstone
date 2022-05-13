@@ -23,7 +23,7 @@ if (sys.argv[1] == '1'):
     newModel = False
 elif (sys.argv[1] == '0'):
     newModel = True
-
+    
 # Create the models folder if it doesn't exist
 if not os.path.exists(os.getcwd()+"/models"):
     os.mkdir(os.getcwd()+"/models")
@@ -44,14 +44,11 @@ if newModel == False:
     print("Please enter the name of the model to be loaded: ")
     load_model_name = input()
     if ".pkl" in load_model_name:
-        load_model_name = load_model_name.replace('.pkl', '')
+       load_model_name = load_model_name.replace('.pkl', '')
     lr = load_model(load_model_name)
     os.chdir("..")
 
 
-# ****************************
-# **Brandon Fuck-around zone**
-# ****************************
 
 # Load and match diffs to tests
 result = versionMatch()
@@ -118,10 +115,7 @@ s = setup(
 
 # Create Logitic regression model
 if (newModel == True):
-    # best = compare_models()
     lr = create_model("lr")
-
-
 # Else we have already loaded a model into the lr variable
 
 # ****************************
@@ -129,19 +123,26 @@ if (newModel == True):
 # ****************************
 if (newModel == True):
     print("Tuning the new model...")
-    # lr = ensemble_model(best, method='Boosting', choose_better=True)
     lr = tune_model(lr)
     print("Sucessfully tuned model.")
-    plot_model(lr, save=True)
+    print("Finalizing model...")
+    lr = finalize_model(lr)
+    print("Successfully finalized model.")
     os.chdir(os.getcwd() + "/models")
     print("Please enter the name of the model to be saved: ")
     model_name = input()
     save_model(lr, model_name)
     os.chdir("..")
 
+#################
+# Using the model
+#################
 
-# Predict
-predictions = predict_model(lr, data=data_unseen)
+
+
+
+# Predict 
+predictions = predict_model(lr,data=data_unseen)
 os.chdir(os.getcwd()+"/predictions")
 now = datetime.now()
 dateString = str(now)
@@ -151,3 +152,5 @@ predictionName = dateString+".csv"
 print(predictionName)
 predictions.to_csv(dateString+".csv")
 os.chdir("..")
+
+
