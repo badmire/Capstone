@@ -1,6 +1,5 @@
 /bin
 /diffs
-<<<<<<< HEAD
 /lib
 /_pycache_
 /tests
@@ -13,7 +12,6 @@ test_out.csv
 .vscode/
 *.png
 *.yml
-=======
 /in
 /include
 /lib
@@ -24,10 +22,7 @@ test_out.csv
 /logs.log
 pyvenv.cfg
 test_out.csv
-/__pycache__
-<<<<<<< HEAD
->>>>>>> e6da6f9 (first branch commit)
-=======
+AUC.png
 /models
 /predictions
->>>>>>> 24ecd07 (Changed variable names around)
+

@@ -1,11 +1,10 @@
 import re
 import csv
 import time
-import glob
 import os
+import pandas as pd
 
-def predictTableCreate(diff):
-    pass
+
 
 def tableCreate(tags, tests, diffs):
     """
@@ -152,35 +151,25 @@ def confidenceThreshold(prediction_list):
     return sorted(prediction_list, key=lambda x: (x["prediction"], x["confidence"]))
 
 
-def loadFiles(File_Type):
-    # THIS FUNCTION NEEDS TO CHANGE TO ACCEPT A PATH W/O HUMAN INTERACTION
-    # A command line argument perhaps?
-    # Ideally, it would point to a directory full of the stuff we need, and just let us run model.py /diffs/directory /tests/directory
-    # file_names = askopenfilenames(title=File_Type, filetypes=[("Data", ("*.csv"))])
+def loadFiles(target_dir):
+    """Takes in directory, returns list of paths to all files in that directory."""
 
-    if File_Type == "Diff csvs":
-        os.chdir(os.getcwd() + "/diffs")
-        file_names = [file for file in glob.glob("*.csv")]
-    if File_Type == "Test csvs":
-        os.chdir(os.getcwd() + "/tests")
-        file_names = [file for file in glob.glob("*.csv")]
-    if File_Type == "Models":
-        os.chdir(os.getcwd() + "/models")
-        file_names = [file for file in glob.glob("*.pkl")]
+    file_paths = []
 
-    os.chdir("..")
-    # print(file_names)
-    return file_names
+    for file in os.scandir(target_dir):
+        file_paths.append(file.path)
+
+    return file_paths
 
 
-def versionMatch():
+def versionMatch(diff_dir_path, test_dir_path):
     """
     Take in path to a directory for diffs, and one for tests, return dictionary with diffs matched to test sets.
     {diff vers: [diff vers path, [test paths,test paths]]}
 
     """
-    diffs = loadFiles("Diff csvs")
-    tests = loadFiles("Test csvs")
+    diffs = loadFiles(diff_dir_path)
+    tests = loadFiles(test_dir_path)
 
     output = dict()
     for diff in diffs:
@@ -226,9 +215,7 @@ def readTests(vM_dict):
     for k, v in vM_dict.items():
         output[k] = dict()
         for test_csv in v[1]:
-            with open(
-                os.getcwd() + "/tests/" + test_csv, "r", encoding="utf8"
-            ) as csv_file:
+            with open(test_csv, "r", encoding="utf8") as csv_file:
                 current = csv.DictReader(csv_file)
                 for row in current:
                     lines_processed += 1
@@ -282,7 +269,7 @@ def loadDiffs(vM_dict):
 
     for k, v in vM_dict.items():
         current = dict()
-        with open(os.getcwd() + "/diffs/" + v[0], "r", encoding="utf8") as target:
+        with open(v[0], "r", encoding="utf8") as target:
             diff = csv.DictReader(target)
             file_changes = []
 
@@ -307,10 +294,57 @@ def loadDiffs(vM_dict):
 
     return output
 
+def createPandasFrame(numerical_tags, categorical_tags, special_tags,diff_path,test_path):
+    """Create the pandas data frame needed for the model
+    
+    Currently possible tags:
+    From diffs:
+    "total_change", "total_add", "total_del", "total_fchange",
+    From tests:
+    "child_link","parent_test_chain","child_result","parent_link","parent_start_date","sw_version","result","run_time","error_message","instrument_name","instrument_git_hash","run_date","collection_date","dut_console_log","is_system_test","connection_type","visa_name","test_git_hash","ptf_git_hash","test_log_file","test_name","test_requirements","test_description","scenario_number","expected_skipped_models","linked_issues_snapshot","seed"
+    Misc:
+    "historic"
+
+    Special:
+    "fchange"
+    """
+    # Load and match diffs to tests
+    result = versionMatch(diff_path,test_path)
+
+    # Load tests and condense them into TestStruct class
+    tests = readTests(result)
+
+    # Load diffs/features
+    diffs = loadDiffs(result)
+
+
+
+
+
+    final_set = tableCreate(
+        numerical_tags + categorical_tags + special_tags, tests, diffs)
+
+    # Adjust which columns to include here
+    if "fchange" in special_tags:
+        file_names = fileChange(diffs)
+        for file in file_names:
+            numerical_tags.append(f"{file}_change")
+            numerical_tags.append(f"{file}_del")
+            numerical_tags.append(f"{file}_add")
+            categorical_tags.append(f"{file}_name")
+            categorical_tags.append(f"{file}_extension")
+
+    print("*************************************")
+    print("***Processing done, starting model***")
+    print("*************************************")
+    
+    return pd.DataFrame(final_set)
+
+
 if __name__ == "__main__":
     # Informal test for historical
 
-    files = versionMatch()
+    files = versionMatch("./diffs","./tests")
 
     diffs = loadDiffs(files)
     tests = readTests(files)

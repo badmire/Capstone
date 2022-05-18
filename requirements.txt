@@ -90,7 +90,7 @@ prometheus-client==0.13.1
 prometheus-flask-exporter==0.19.0
 prompt-toolkit==3.0.28
 protobuf==3.19.4
-pycaret==2.3.8
+pycaret==2.3.10
 pycparser==2.21
 pydantic==1.9.0
 Pygments==2.11.2
