@@ -252,7 +252,9 @@ def readTests(vM_dict):
         print(f"Lines processed: {lines_processed}")
 
     # Write test library for later use
-    test_lib_file.write(line + '\n' for line in test_lib)
+    for line in test_lib:
+        line = line + '\n'
+        test_lib_file.write(line)
     test_lib_file.close()
 
     return output
