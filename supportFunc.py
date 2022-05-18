@@ -135,22 +135,6 @@ def historicRecord(tests):
     return output
 
 
-def confidenceThreshold(prediction_list):
-    """
-    Take in a list of dictionaries stored as prediction_list and order it according to the following structure:
-        1. All failed tests
-        2. Confidence: low to high
-
-    Each dictionary in the list has a key for “prediction” which is either the string “SUCCESS” or “FAILURE”. Each dictionary has a key for “confidence” which is a number 0-1. 1 being 100% confident and 0 being 0% confident.
-
-    Sort the list to have all failed tests at the start of the list and then have the lowest confident tests next. The end of the list therefore has the highest confidence test prediction.
-
-    return(sorted_prediction_list)
-
-    """
-    return sorted(prediction_list, key=lambda x: (x["prediction"], x["confidence"]))
-
-
 def loadFiles(target_dir):
     """Takes in directory, returns list of paths to all files in that directory."""
 

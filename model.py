@@ -45,7 +45,10 @@ if newModel == True:
 
 
 if (newModel == False):
-    forcastPredictions("./diffs/v1_41_8_930.csv","./models/current_model")
+    output = forcastPredictions("./diffs/v1_41_8_930.csv","./models/current_model")
+
+    for final in output:
+        print(final)
 
 
 

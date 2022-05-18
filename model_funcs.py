@@ -1,4 +1,6 @@
+from unittest import result
 from pycaret.classification import *
+from sqlalchemy import true
 from supportFunc import *
 import shutil
 import re
@@ -125,6 +127,14 @@ def forcastPredictions(target_diff_path,model_path):
 
     # Finally, make prediction/forcast
     predictions = predict_model(model, data=target_data)
+
+    test_names = predictions['test_name'].tolist()
+    results = predictions['Label'].tolist()
+    scores = predictions['Score'].tolist()
+
+    zipper = zip(test_names,results,scores)
+    output = sorted(zipper,key=lambda x: (x[1],x[2]*-1))
+
     os.chdir(os.getcwd()+"/predictions")
     now = datetime.datetime.now()
     dateString = str(now)
@@ -134,6 +144,9 @@ def forcastPredictions(target_diff_path,model_path):
     print(predictionName)
     predictions.to_csv(dateString+".csv")
     os.chdir("..")
+
+    return output
+    
 
 
 
