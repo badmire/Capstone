@@ -6,6 +6,7 @@
 from pycaret.classification import *
 import pandas as pd
 import sys
+
 from supportFunc import *
 from datetime import datetime
 
@@ -18,6 +19,9 @@ if (len(sys.argv) != 2):
 
 
 newModel = False
+model = []
+target_data = []
+
 
 if (sys.argv[1] == '1'):
     newModel = False
@@ -45,104 +49,103 @@ if newModel == False:
     load_model_name = input()
     if ".pkl" in load_model_name:
         load_model_name = load_model_name.replace('.pkl', '')
-    lr = load_model(load_model_name)
+    model = load_model(load_model_name)
     os.chdir("..")
 
+if newModel == True:
+    # Load and match diffs to tests
+    result = versionMatch()
 
-# Load and match diffs to tests
-result = versionMatch()
+    # Load tests and condense them into TestStruct class
+    tests = readTests(result)
 
-# Load tests and condense them into TestStruct class
-tests = readTests(result)
+    # Load diffs/features
+    diffs = loadDiffs(result)
 
-# Load diffs/features
-diffs = loadDiffs(result)
+    # Currently possible tags:
+    # From diffs:
+    # "total_change", "total_add", "total_del", "total_fchange",
+    # From tests:
+    # "child_link","parent_test_chain","child_result","parent_link","parent_start_date","sw_version","result","run_time","error_message","instrument_name","instrument_git_hash","run_date","collection_date","dut_console_log","is_system_test","connection_type","visa_name","test_git_hash","ptf_git_hash","test_log_file","test_name","test_requirements","test_description","scenario_number","expected_skipped_models","linked_issues_snapshot","seed"
+    # Misc:
+    # "historic"
 
-# Currently possible tags:
-# From diffs:
-# "total_change", "total_add", "total_del", "total_fchange",
-# From tests:
-# "child_link","parent_test_chain","child_result","parent_link","parent_start_date","sw_version","result","run_time","error_message","instrument_name","instrument_git_hash","run_date","collection_date","dut_console_log","is_system_test","connection_type","visa_name","test_git_hash","ptf_git_hash","test_log_file","test_name","test_requirements","test_description","scenario_number","expected_skipped_models","linked_issues_snapshot","seed"
-# Misc:
-# "historic"
+    # Special:
+    # "fchange"
 
-# Special:
-# "fchange"
+    numerical_tags = ["total_change", "total_add", "total_del", "total_fchange"]
 
-numerical_tags = ["total_change", "total_add", "total_del", "total_fchange"]
+    categorical_tags = []
 
-categorical_tags = []
+    # For tags that produce more columns or have special logic
+    special_tags = ["fchange"]
 
-# For tags that produce more columns or have special logic
-special_tags = ["fchange"]
+    final_set = tableCreate(
+        numerical_tags + categorical_tags + special_tags, tests, diffs)
 
-final_set = tableCreate(
-    numerical_tags + categorical_tags + special_tags, tests, diffs)
+    # Adjust which columns to include here
+    if "fchange" in special_tags:
+        file_names = fileChange(diffs)
+        for file in file_names:
+            numerical_tags.append(f"{file}_change")
+            numerical_tags.append(f"{file}_del")
+            numerical_tags.append(f"{file}_add")
+            categorical_tags.append(f"{file}_name")
+            categorical_tags.append(f"{file}_extension")
 
-# Adjust which columns to include here
-if "fchange" in special_tags:
-    file_names = fileChange(diffs)
-    for file in file_names:
-        numerical_tags.append(f"{file}_change")
-        numerical_tags.append(f"{file}_del")
-        numerical_tags.append(f"{file}_add")
-        categorical_tags.append(f"{file}_name")
-        categorical_tags.append(f"{file}_extension")
-
-print("*************************************")
-print("***Processing done, starting model***")
-print("*************************************")
+    print("*************************************")
+    print("***Processing done, starting model***")
+    print("*************************************")
+    
 
 
-dataset = pd.DataFrame(final_set)
+    dataset = pd.DataFrame(final_set)
 
-data = dataset.sample(frac=0.95, random_state=786)
-data_unseen = dataset.drop(data.index)
-data.reset_index(inplace=True, drop=True)
-data_unseen.reset_index(inplace=True, drop=True)
-print("Data for Modeling: " + str(data.shape))
-print("Unseen Data For Predictions: " + str(data_unseen.shape))
+    target_data = dataset.sample(frac=0.95, random_state=786)
+    data_unseen = dataset.drop(target_data.index)
+    target_data.reset_index(inplace=True, drop=True)
+    data_unseen.reset_index(inplace=True, drop=True)
+    print("Data for Modeling: " + str(target_data.shape))
+    print("Unseen Data For Predictions: " + str(data_unseen.shape))
 
-s = setup(
-    data,
-    target="result",
-    numeric_features=numerical_tags,
-    categorical_features=categorical_tags,
-    silent=True,
-    remove_perfect_collinearity=False
-)
+    s = setup(
+        target_data,
+        target="result",
+        numeric_features=numerical_tags,
+        categorical_features=categorical_tags,
+        silent=True,
+        remove_perfect_collinearity=False
+    )
 
-# Create Logitic regression model
-if (newModel == True):
+    # Create Logitic regression model
+
     # best = compare_models()
-    lr = create_model("lr")
+    model = create_model("lr")
 
 
-# Else we have already loaded a model into the lr variable
+    # Else we have already loaded a model into the lr variable
 
-# ****************************
-# Tune and then save the model "lr" here:
-# ****************************
-if (newModel == True):
+    # ****************************
+    # Tune and then save the model "lr" here:
+    # ****************************
+
     print("Tuning the new model...")
     # lr = ensemble_model(best, method='Boosting', choose_better=True)
-    lr = tune_model(lr)
+    model = tune_model(model)
     print("Sucessfully tuned model.")
-    plot_model(lr, save=True)
+    plot_model(model, save=True)
     os.chdir(os.getcwd() + "/models")
     print("Please enter the name of the model to be saved: ")
     model_name = input()
-    save_model(lr, model_name)
+    save_model(model, model_name)
     os.chdir("..")
-
-target_data = data_unseen
 
 if (newModel == False):
     # Make target_data only use the new diff we are trying to analyse
     pass
 
 # Predict
-predictions = predict_model(lr, data=target_data)
+predictions = predict_model(model, data=target_data)
 os.chdir(os.getcwd()+"/predictions")
 now = datetime.now()
 dateString = str(now)

@@ -11,3 +11,5 @@
 pyvenv.cfg
 test_out.csv
 /__pycache__
+/models
+/predictions
