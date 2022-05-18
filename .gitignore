@@ -25,4 +25,9 @@ test_out.csv
 pyvenv.cfg
 test_out.csv
 /__pycache__
+<<<<<<< HEAD
 >>>>>>> e6da6f9 (first branch commit)
+=======
+/models
+/predictions
+>>>>>>> 24ecd07 (Changed variable names around)

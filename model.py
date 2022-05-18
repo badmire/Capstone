@@ -56,8 +56,11 @@ if newModel == True:
     # Load and match diffs to tests
     result = versionMatch()
 
-# Load and match diffs to tests
-    result = versionMatch()
+    # Load tests and condense them into TestStruct class
+    tests = readTests(result)
+
+    # Load diffs/features
+    diffs = loadDiffs(result)
 
     # Currently possible tags:
     # From diffs:
@@ -119,6 +122,7 @@ if newModel == True:
     # best = compare_models()
     model = create_model("lr")
 
+    # Else we have already loaded a model into the lr variable
 
     # Else we have already loaded a model into the lr variable
 
@@ -137,14 +141,12 @@ if newModel == True:
     save_model(model, model_name)
     os.chdir("..")
 
-target_data = data_unseen
-
 if (newModel == False):
     # Make target_data only use the new diff we are trying to analyse
     pass
 
 # Predict
-predictions = predict_model(lr, data=target_data)
+predictions = predict_model(model, data=target_data)
 os.chdir(os.getcwd()+"/predictions")
 now = datetime.now()
 dateString = str(now)
