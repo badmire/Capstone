@@ -49,10 +49,6 @@ if newModel == False:
     os.chdir("..")
 
 
-# ****************************
-# **Brandon Fuck-around zone**
-# ****************************
-
 # Load and match diffs to tests
 result = versionMatch()
 
@@ -139,9 +135,14 @@ if (newModel == True):
     save_model(lr, model_name)
     os.chdir("..")
 
+target_data = data_unseen
+
+if (newModel == False):
+    # Make target_data only use the new diff we are trying to analyse
+    pass
 
 # Predict
-predictions = predict_model(lr, data=data_unseen)
+predictions = predict_model(lr, data=target_data)
 os.chdir(os.getcwd()+"/predictions")
 now = datetime.now()
 dateString = str(now)

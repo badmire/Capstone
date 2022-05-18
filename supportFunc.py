@@ -4,6 +4,8 @@ import time
 import glob
 import os
 
+def predictTableCreate(diff):
+    pass
 
 def tableCreate(tags, tests, diffs):
     """
