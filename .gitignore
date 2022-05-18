@@ -1,5 +1,6 @@
 /bin
 /diffs
+<<<<<<< HEAD
 /lib
 /_pycache_
 /tests
@@ -12,3 +13,16 @@ test_out.csv
 .vscode/
 *.png
 *.yml
+=======
+/in
+/include
+/lib
+/out
+/python=~
+/tests
+/venv
+/logs.log
+pyvenv.cfg
+test_out.csv
+/__pycache__
+>>>>>>> e6da6f9 (first branch commit)
