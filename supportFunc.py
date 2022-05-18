@@ -4,6 +4,8 @@ import time
 import glob
 import os
 
+def predictTableCreate(diff):
+    pass
 
 def tableCreate(tags, tests, diffs):
     """
@@ -304,8 +306,6 @@ def loadDiffs(vM_dict):
             output[k] = current
 
     return output
-
-
 
 if __name__ == "__main__":
     # Informal test for historical
