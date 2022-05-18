@@ -3,86 +3,151 @@
 # 2. Setup data into test and training set
 # 3. Create Model based on data
 # 4. Add additional CSV's and associate correctly
-from html.entities import name2codepoint
 from pycaret.classification import *
-import csv
 import pandas as pd
-from tkinter.filedialog import askopenfilenames
+import sys
+from supportFunc import *
+from datetime import datetime
 
-test_number = 0
-result_lst = []
-data_lst = []
 
-def loadFiles():
-    file_names = askopenfilenames(title="Select file", filetypes=[(
-        "Data", ("*.csv"))])
-    print(file_names)
-    return file_names
+if (len(sys.argv) != 2):
+    print("Please add the following command line option: ")
+    print("0: Train (Create a new model)")
+    print("1: Predict (Use old model to predict test outcomes)")
+    sys.exit
 
-def loadResults(filename, testnum):
-    with open(filename, mode='r', encoding='utf-8') as csv_file:
-        csv_reader = csv.DictReader(csv_file)
-        line_count = 0
-        for row in csv_reader:
-            curr_row = {}
-            curr_row["child_result"] = row["child_result"]
-            if line_count == testnum:
-                result_lst.append(curr_row)
-            line_count += 1
-        print(f'Processed {line_count} lines.')
 
-def loadData(filename):
-    with open(filename, mode='r', encoding='utf-8') as csv_file:
-        csv_reader = csv.DictReader(csv_file)
-        line_count = 0
-        curr_row = {}
-        filenames = []
-        for row in csv_reader:
-            filenames.append(row["Filename"])
-            curr_row["num_changes"] = row["total number of files changed for diff"]
-            line_count += 1
-        curr_row["Filename"] = filenames
-        data_lst.append(curr_row)
-        print(f'Processed {line_count} lines.')
+newModel = False
 
-#Make these 2 lists equivalent in file names to ensure diffs and results line up
-file_names = loadFiles()
-file_names_test = loadFiles()
+if (sys.argv[1] == '1'):
+    newModel = False
+elif (sys.argv[1] == '0'):
+    newModel = True
 
-for name in file_names:
-    loadData(name)
+# Create the models folder if it doesn't exist
+if not os.path.exists(os.getcwd()+"/models"):
+    os.mkdir(os.getcwd()+"/models")
 
-for name in file_names_test:
-    loadResults(name, test_number)
+# Create the predictions folder if it doesn't exit
+if not os.path.exists(os.getcwd()+"/predictions"):
+    os.mkdir(os.getcwd()+"/predictions")
 
-for iterator in range(len(data_lst)):
-    data_lst[iterator]['child_result'] = result_lst[iterator]['child_result']
+if newModel == False:
+    model_names = loadFiles("Models")
+    print("\n")
+    print("\n")
+    print("\n")
+    print("Found ", len(model_names), " models: ")
+    for model in model_names:
+        print(model)
+    os.chdir(os.getcwd() + "/models")
+    print("Please enter the name of the model to be loaded: ")
+    load_model_name = input()
+    if ".pkl" in load_model_name:
+        load_model_name = load_model_name.replace('.pkl', '')
+    lr = load_model(load_model_name)
+    os.chdir("..")
 
-dataset = pd.DataFrame(data_lst)
 
-test = data_lst[0]
+# ****************************
+# **Brandon Fuck-around zone**
+# ****************************
 
+# Load and match diffs to tests
+result = versionMatch()
+
+# Load tests and condense them into TestStruct class
+tests = readTests(result)
+
+# Load diffs/features
+diffs = loadDiffs(result)
+
+# Currently possible tags:
+# From diffs:
+# "total_change", "total_add", "total_del", "total_fchange",
+# From tests:
+# "child_link","parent_test_chain","child_result","parent_link","parent_start_date","sw_version","result","run_time","error_message","instrument_name","instrument_git_hash","run_date","collection_date","dut_console_log","is_system_test","connection_type","visa_name","test_git_hash","ptf_git_hash","test_log_file","test_name","test_requirements","test_description","scenario_number","expected_skipped_models","linked_issues_snapshot","seed"
+# Misc:
+# "historic"
+
+# Special:
+# "fchange"
+
+numerical_tags = ["total_change", "total_add", "total_del", "total_fchange"]
+
+categorical_tags = []
+
+# For tags that produce more columns or have special logic
+special_tags = ["fchange"]
+
+final_set = tableCreate(
+    numerical_tags + categorical_tags + special_tags, tests, diffs)
+
+# Adjust which columns to include here
+if "fchange" in special_tags:
+    file_names = fileChange(diffs)
+    for file in file_names:
+        numerical_tags.append(f"{file}_change")
+        numerical_tags.append(f"{file}_del")
+        numerical_tags.append(f"{file}_add")
+        categorical_tags.append(f"{file}_name")
+        categorical_tags.append(f"{file}_extension")
+
+print("*************************************")
+print("***Processing done, starting model***")
+print("*************************************")
+
+
+dataset = pd.DataFrame(final_set)
 
 data = dataset.sample(frac=0.95, random_state=786)
 data_unseen = dataset.drop(data.index)
 data.reset_index(inplace=True, drop=True)
 data_unseen.reset_index(inplace=True, drop=True)
-print('Data for Modeling: ' + str(data.shape))
-print('Unseen Data For Predictions: ' + str(data_unseen.shape))
+print("Data for Modeling: " + str(data.shape))
+print("Unseen Data For Predictions: " + str(data_unseen.shape))
 
-s = setup(data, target = 'child_result', numeric_features= ['num_changes'])
-numeric_features= ['num_changes']
+s = setup(
+    data,
+    target="result",
+    numeric_features=numerical_tags,
+    categorical_features=categorical_tags,
+    silent=True,
+    remove_perfect_collinearity=False
+)
 
-rf = create_model('rf',fold=3)
-print(rf)
+# Create Logitic regression model
+if (newModel == True):
+    # best = compare_models()
+    lr = create_model("lr")
 
-tuned_rf = tune_model(rf, fold = 3)
-print(tuned_rf)
 
-predict_model(tuned_rf)
+# Else we have already loaded a model into the lr variable
 
-# plot_model(rf)
+# ****************************
+# Tune and then save the model "lr" here:
+# ****************************
+if (newModel == True):
+    print("Tuning the new model...")
+    # lr = ensemble_model(best, method='Boosting', choose_better=True)
+    lr = tune_model(lr)
+    print("Sucessfully tuned model.")
+    plot_model(lr, save=True)
+    os.chdir(os.getcwd() + "/models")
+    print("Please enter the name of the model to be saved: ")
+    model_name = input()
+    save_model(lr, model_name)
+    os.chdir("..")
 
-# best = compare_models()
-# print(best)
-# plot_model(best, plot = 'auc')
+
+# Predict
+predictions = predict_model(lr, data=data_unseen)
+os.chdir(os.getcwd()+"/predictions")
+now = datetime.now()
+dateString = str(now)
+dateString = dateString[:16]
+dateString = dateString.replace(':', '-')
+predictionName = dateString+".csv"
+print(predictionName)
+predictions.to_csv(dateString+".csv")
+os.chdir("..")
