@@ -39,29 +39,13 @@ if not os.path.exists(os.getcwd()+"/models"):
 if not os.path.exists(os.getcwd()+"/predictions"):
     os.mkdir(os.getcwd()+"/predictions")
 
-if newModel == False:
-    model_names = loadFiles("Models")
-    print("\n")
-    print("\n")
-    print("\n")
-    print("Found ", len(model_names), " models: ")
-    for model in model_names:
-        print(model)
-    os.chdir(os.getcwd() + "/models")
-    print("Please enter the name of the model to be loaded: ")
-    load_model_name = input()
-    if ".pkl" in load_model_name:
-        load_model_name = load_model_name.replace('.pkl', '')
-    model = load_model(load_model_name)
-    os.chdir("..")
 
 if newModel == True:
     createNewModel("./diffs","./tests")
 
 
 if (newModel == False):
-    # function currently a placeholder
-    forcastPredictions("path/to/diff",model)
+    forcastPredictions("./diffs/v1_41_8_930.csv","./models/current_model")
 
 
 

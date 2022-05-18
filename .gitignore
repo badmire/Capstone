@@ -25,4 +25,5 @@ test_out.csv
 AUC.png
 /models
 /predictions
-
+*.csv
+*.png

@@ -1,6 +1,8 @@
 from pycaret.classification import *
 from supportFunc import *
 import shutil
+import re
+import datetime
 
 numerical_tags = ["total_change", "total_add", "total_del", "total_fchange"]
 
@@ -46,8 +48,92 @@ def createNewModel(diff_path,test_path,model_save=f"current_model"):
     plot_model(model, save=True)
 
     save_model(model, model_save)
-    shutil.copy(f"./{model_save}.pkl",f"./models/{model_save}.pkl")
+    shutil.move(f"./{model_save}.pkl",f"./models/{model_save}.pkl")
 
-def forcastPredictions(target_diff,model):
+
+
+
+def forcastPredictions(target_diff_path,model_path):
     """Uses existing model to make predictions."""
-    pass
+    # Load the model
+    model = load_model(model_path)
+
+    # Construct list of expected column heads by the model
+    headers =  model.named_steps['dtypes'].final_training_columns
+
+    # Simulate functionality of the versionMatch function for a single, targeted, diff.
+    target = dict()
+
+    target[re.findall("\d+_\d+_\d+_\d+", target_diff_path)[0]] = [target_diff_path, []]
+
+    version = list(target.keys())[0]
+
+    # Load the diff into a familar format
+    diff = loadDiffs(target)
+
+    # Strip off a layer of dict
+    diff = next(iter(diff.values()))
+
+    # Build a list of tests from historical test results
+    test_lib = [line.rstrip() for line in open('./test_lib.txt')]
+
+    final_set = dict()
+
+    for header in headers:
+        final_set[header] = []
+
+    for test in test_lib:
+        final_set['test_name'].append(test)
+        final_set['version'].append(version)
+
+        # Iterate through all required headers and fill in value
+        for key in final_set.keys():
+            if key == "test_name": # Skip test_name
+                continue
+            if key == "version":
+                continue
+            # When value is known
+            if key in diff:
+                final_set[key].append(diff[key])
+                continue
+            else:
+                #Check for nested file type info
+                if key[key.rfind("_"):] in ["_extension","_change","_del","_add"]: # Skip extras after file name
+                    continue
+                if key[key.rfind("_"):] == "_name":
+                    if key[:key.rfind("_")] in diff["files"]:
+                        final_set[key].append(1)
+                        final_set[key[:key.rfind("_")]+"_extension"].append(diff["files"][key[:key.rfind("_")]]["extension"])
+                        final_set[key[:key.rfind("_")]+"_change"].append(diff["files"][key[:key.rfind("_")]]["file_change"])
+                        final_set[key[:key.rfind("_")]+"_del"].append(diff["files"][key[:key.rfind("_")]]["file_del"])
+                        final_set[key[:key.rfind("_")]+"_add"].append(diff["files"][key[:key.rfind("_")]]["file_add"])
+                    else:
+                        final_set[key].append(0)
+                        final_set[key[:key.rfind("_")]+"_extension"].append(0)
+                        final_set[key[:key.rfind("_")]+"_change"].append(0)
+                        final_set[key[:key.rfind("_")]+"_del"].append(0)
+                        final_set[key[:key.rfind("_")]+"_add"].append(0)
+                else: # File not present in diff, set to null
+                    final_set[key].append(0)
+
+    print("Building dataframe...")
+    target_data = pd.DataFrame(final_set)
+
+    target_data.to_csv("./target_data.csv")
+    print("done")
+
+
+    # Finally, make prediction/forcast
+    predictions = predict_model(model, data=target_data)
+    os.chdir(os.getcwd()+"/predictions")
+    now = datetime.datetime.now()
+    dateString = str(now)
+    dateString = dateString[:16]
+    dateString = dateString.replace(':', '-')
+    predictionName = dateString+".csv"
+    print(predictionName)
+    predictions.to_csv(dateString+".csv")
+    os.chdir("..")
+
+
+
