@@ -39,16 +39,19 @@ if not os.path.exists(os.getcwd()+"/models"):
 if not os.path.exists(os.getcwd()+"/predictions"):
     os.mkdir(os.getcwd()+"/predictions")
 
+# Create the output folder if it doesn't exit
+if not os.path.exists(os.getcwd()+"/output"):
+    os.mkdir(os.getcwd()+"/output")
 
 if newModel == True:
     createNewModel("./diffs","./tests")
 
 
 if (newModel == False):
-    output = forcastPredictions("./diffs/v1_41_8_930.csv","./models/current_model")
+    output = forcastPredictions("./data_unseen/v1_41_8_930.csv","./models/current_model")
 
-    for final in output:
-        print(final)
+    # for final in output:
+    #     print(final)
 
 
 

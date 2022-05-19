@@ -27,3 +27,5 @@ AUC.png
 /predictions
 *.csv
 *.png
+/output
+/data_unseen

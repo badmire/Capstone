@@ -1,10 +1,10 @@
-from unittest import result
+from nbformat import write
 from pycaret.classification import *
-from sqlalchemy import true
 from supportFunc import *
 import shutil
 import re
 import datetime
+import csv
 
 numerical_tags = ["total_change", "total_add", "total_del", "total_fchange"]
 
@@ -144,6 +144,12 @@ def forcastPredictions(target_diff_path,model_path):
     print(predictionName)
     predictions.to_csv(dateString+".csv")
     os.chdir("..")
+
+    # Save output to csv
+    with open(f"./output/output-{str(now).replace(':','-')}.csv","w",newline='') as target_file:
+        writer = csv.writer(target_file)
+        writer.writerow(["test_name","Label","Score"])
+        writer.writerows(output)
 
     return output
     
