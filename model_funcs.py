@@ -1,4 +1,4 @@
-from nbformat import write
+
 from pycaret.classification import *
 from supportFunc import *
 import shutil
@@ -55,7 +55,7 @@ def createNewModel(diff_path,test_path,model_save=f"current_model"):
 
 
 
-def forcastPredictions(target_diff_path,model_path):
+def forcastPredictions(target_diff_path,model_path="./models/current_model"):
     """Uses existing model to make predictions."""
     # Load the model
     model = load_model(model_path)
