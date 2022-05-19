@@ -48,7 +48,7 @@ if newModel == True:
 
 
 if (newModel == False):
-    output = forcastPredictions("./data_unseen/v1_41_8_930.csv","./models/current_model")
+    output = forcastPredictions("./data_unseen/v1_41_8_930.csv")
 
     # for final in output:
     #     print(final)

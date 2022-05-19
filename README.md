@@ -23,6 +23,8 @@ Our solution to this particular problem is to leverage the power of machine lear
 
 Setup Environment:
 
+pycaret requires python 3.6 to operate correctly
+
 ```
 virtualenv myenv
 myenv\Scripts\activate
@@ -38,11 +40,15 @@ $ model.py -> [args]
 First argument: 0 or 1
 
 - 0 = Make a new model
-- 1 = Use an old model
-
 Second argument: path/to/diff/directory
-
 Third argument: path/to/test/directory
+
+- 1 = Use an old model
+Second argument: path/to/target/raw/diff.txt
+
+optional flags:
+-p  Changes behavior to target a processed diff
+-c path/to/model    Use to run a prediction against specified model
 
 ### Flags:
 

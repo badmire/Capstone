@@ -13,7 +13,14 @@ categorical_tags = []
 special_tags = ["fchange"]
 
 def createNewModel(diff_path,test_path,model_save=f"current_model"):
-    """Creates new model to be saved."""
+    """Creates new model to be saved.
+    -diff_path and test_path should just point at a directory full of 
+    diffs and tests respecivly. diffs should be processed in advance 
+    via the logExtract.py.
+    
+    -model_save is the name the model should be saved as without extension.
+    Defaults to "current_model"
+    """
     # Create table for modeling
     dataset = createPandasFrame(numerical_tags,categorical_tags,special_tags,diff_path,test_path)
 
@@ -56,7 +63,19 @@ def createNewModel(diff_path,test_path,model_save=f"current_model"):
 
 
 def forcastPredictions(target_diff_path,model_path="./models/current_model"):
-    """Uses existing model to make predictions."""
+    """Uses existing model to make predictions.
+    Two sets of predictions are produced. The full output of the model is saved
+    in the ./predictions directory as a csv, and a condensed, sorted version in
+    the ./output directory, also as a csv. In both cases, they are saved using
+    the current time stamp.
+
+    Uses the default "current_model" that is saved in the ./models directory,
+    can specify a different model to use with the model_path parameter.
+
+    -target_diff_path is the path to a csv diff file that has been processed 
+    with logExtract.py
+
+    """
     # Load the model
     model = load_model(model_path)
 

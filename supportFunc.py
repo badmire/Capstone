@@ -99,7 +99,8 @@ def fileChange(diffs):
 
 
 def historicRecord(tests):
-    """Take in dict of tests of the format from the readTests() function, for each test calculate historic fail rate, return dict.
+    """***Not currently working with predictions***
+    Take in dict of tests of the format from the readTests() function, for each test calculate historic fail rate, return dict.
 
     Calculates historic pass/fail rate over all tests results.
 
@@ -179,7 +180,7 @@ def log_err(text, target_path):
 
 def readTests(vM_dict):
     """
-    Take in versionMatch() dict, load all data fields from from each test into output dict, organized by version.
+    Take in versionMatch() dict, load all data fields from from each test into output dict, organized by version. Also responsible for building test_lib.txt
 
     Skipping untested/skipped tests coupled with indexing tests by scenario number yields no duplicate
     tests in a given version at this time.
@@ -317,10 +318,6 @@ def createPandasFrame(numerical_tags, categorical_tags, special_tags,diff_path,t
             numerical_tags.append(f"{file}_add")
             categorical_tags.append(f"{file}_name")
             categorical_tags.append(f"{file}_extension")
-
-    print("*************************************")
-    print("***Processing done, starting model***")
-    print("*************************************")
     
     return pd.DataFrame(final_set)
 
