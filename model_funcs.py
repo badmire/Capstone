@@ -16,7 +16,7 @@ def createNewModel(diff_path,test_path,model_save=f"current_model"):
     """Creates new model to be saved.
     -diff_path and test_path should just point at a directory full of 
     diffs and tests respecivly. diffs should be processed in advance 
-    via the logExtract.py.
+    via the extractLogs().
     
     -model_save is the name the model should be saved as without extension.
     Defaults to "current_model"
@@ -73,7 +73,7 @@ def forcastPredictions(target_diff_path,model_path="./models/current_model"):
     can specify a different model to use with the model_path parameter.
 
     -target_diff_path is the path to a csv diff file that has been processed 
-    with logExtract.py
+    with extractLogs()
 
     """
     # Load the model
