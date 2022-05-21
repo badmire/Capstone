@@ -24,7 +24,7 @@ def createNewModel(diff_path,test_path,model_save=f"current_model"):
     # Create table for modeling
     dataset = createPandasFrame(numerical_tags,categorical_tags,special_tags,diff_path,test_path)
 
-    target_data = dataset.sample(frac=0.95, random_state=786)
+    target_data = dataset.sample(frac=0.95, random_state=245)
     data_unseen = dataset.drop(target_data.index)
     target_data.reset_index(inplace=True, drop=True)
     data_unseen.reset_index(inplace=True, drop=True)
@@ -44,15 +44,14 @@ def createNewModel(diff_path,test_path,model_save=f"current_model"):
     # Create Logitic regression model
 
     # best = compare_models()
-    model = create_model("lr")
+    best_models = compare_models(include = ['dt', 'ada', 'ridge', 'lr', 'nb', 'svm', 'rf', 'lightgbm', 'dummy', 'knn'], n_select = 3)
 
     # ****************************
     # Tune and then save the model:
     # ****************************
 
     print("Tuning the new model...")
-    # lr = ensemble_model(best, method='Boosting', choose_better=True)
-    model = tune_model(model)
+    model = blend_models(estimator_list = best_models)
     print("Sucessfully tuned model.")
     plot_model(model, save=True)
 
