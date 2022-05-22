@@ -3,27 +3,46 @@
 # 2. Setup data into test and training set
 # 3. Create Model based on data
 # 4. Add additional CSV's and associate correctly
+
 from pycaret.classification import *
-import pandas as pd
 import sys
+import argparse
+
+from model_funcs import *
 from supportFunc import *
 from datetime import datetime
 
-
-if (len(sys.argv) != 2):
-    print("Please add the following command line option: ")
-    print("0: Train (Create a new model)")
-    print("1: Predict (Use old model to predict test outcomes)")
-    sys.exit
-
+parser = argparse.ArgumentParser(description='Apply PyCaret ML to a set of tests and diffs.')
+parser.add_argument('--p', '--processed', action='store_true', help='Tell the program to load processed diffs rather than raw diffs.')
+parser.add_argument('--c', '--custom_model_name', help='Tell the program to load or save a PyCaret model with a unique name. Models are saved in the models directory.')
+parser.add_argument('new_model_option', choices=[0, 1], type=int, help='0: Create a new PyCaret model. 1: Load an existing model.')
+args = parser.parse_args()
 
 newModel = False
+doProcessed = False
+modelName = "current_model"
 
-if (sys.argv[1] == '1'):
-    newModel = False
-elif (sys.argv[1] == '0'):
+
+# argparse handles invalid options
+if (args.new_model_option == 0):
     newModel = True
-    
+elif (args.new_model_option == 1):
+    newModel = False
+
+if (args.p is not None):
+    doProcessed = True
+
+if (args.c is not None):
+    modelName = args.c
+
+
+
+
+model = []
+target_data = []
+
+
+
 # Create the models folder if it doesn't exist
 if not os.path.exists(os.getcwd()+"/models"):
     os.mkdir(os.getcwd()+"/models")
@@ -32,125 +51,30 @@ if not os.path.exists(os.getcwd()+"/models"):
 if not os.path.exists(os.getcwd()+"/predictions"):
     os.mkdir(os.getcwd()+"/predictions")
 
-if newModel == False:
-    model_names = loadFiles("Models")
-    print("\n")
-    print("\n")
-    print("\n")
-    print("Found ", len(model_names), " models: ")
-    for model in model_names:
-        print(model)
-    os.chdir(os.getcwd() + "/models")
-    print("Please enter the name of the model to be loaded: ")
-    load_model_name = input()
-    if ".pkl" in load_model_name:
-       load_model_name = load_model_name.replace('.pkl', '')
-    lr = load_model(load_model_name)
-    os.chdir("..")
+# Create the output folder if it doesn't exit
+if not os.path.exists(os.getcwd()+"/output"):
+    os.mkdir(os.getcwd()+"/output")
+
+if newModel == True:
+    createNewModel("./diffs","./tests",modelName)
+
+
+if (newModel == False):
+    output = forcastPredictions("./data_unseen/v1_41_8_930.csv",modelName,doProcessed)
+
+    # for final in output:
+    #     print(final)
 
 
 
-# Load and match diffs to tests
-result = versionMatch()
-
-# Load tests and condense them into TestStruct class
-tests = readTests(result)
-
-# Load diffs/features
-diffs = loadDiffs(result)
-
-# Currently possible tags:
-# From diffs:
-# "total_change", "total_add", "total_del", "total_fchange",
-# From tests:
-# "child_link","parent_test_chain","child_result","parent_link","parent_start_date","sw_version","result","run_time","error_message","instrument_name","instrument_git_hash","run_date","collection_date","dut_console_log","is_system_test","connection_type","visa_name","test_git_hash","ptf_git_hash","test_log_file","test_name","test_requirements","test_description","scenario_number","expected_skipped_models","linked_issues_snapshot","seed"
-# Misc:
-# "historic"
-
-# Special:
-# "fchange"
-
-numerical_tags = ["total_change", "total_add", "total_del", "total_fchange"]
-
-categorical_tags = []
-
-# For tags that produce more columns or have special logic
-special_tags = ["fchange"]
-
-final_set = tableCreate(
-    numerical_tags + categorical_tags + special_tags, tests, diffs)
-
-# Adjust which columns to include here
-if "fchange" in special_tags:
-    file_names = fileChange(diffs)
-    for file in file_names:
-        numerical_tags.append(f"{file}_change")
-        numerical_tags.append(f"{file}_del")
-        numerical_tags.append(f"{file}_add")
-        categorical_tags.append(f"{file}_name")
-        categorical_tags.append(f"{file}_extension")
-
-print("*************************************")
-print("***Processing done, starting model***")
-print("*************************************")
-
-
-dataset = pd.DataFrame(final_set)
-
-data = dataset.sample(frac=0.95, random_state=786)
-data_unseen = dataset.drop(data.index)
-data.reset_index(inplace=True, drop=True)
-data_unseen.reset_index(inplace=True, drop=True)
-print("Data for Modeling: " + str(data.shape))
-print("Unseen Data For Predictions: " + str(data_unseen.shape))
-
-s = setup(
-    data,
-    target="result",
-    numeric_features=numerical_tags,
-    categorical_features=categorical_tags,
-    silent=True,
-    remove_perfect_collinearity=False
-)
-
-# Create Logitic regression model
-if (newModel == True):
-    lr = create_model("lr")
-# Else we have already loaded a model into the lr variable
-
-# ****************************
-# Tune and then save the model "lr" here:
-# ****************************
-if (newModel == True):
-    print("Tuning the new model...")
-    lr = tune_model(lr)
-    print("Sucessfully tuned model.")
-    print("Finalizing model...")
-    lr = finalize_model(lr)
-    print("Successfully finalized model.")
-    os.chdir(os.getcwd() + "/models")
-    print("Please enter the name of the model to be saved: ")
-    model_name = input()
-    save_model(lr, model_name)
-    os.chdir("..")
-
-#################
-# Using the model
-#################
-
-
-
-
-# Predict 
-predictions = predict_model(lr,data=data_unseen)
-os.chdir(os.getcwd()+"/predictions")
-now = datetime.now()
-dateString = str(now)
-dateString = dateString[:16]
-dateString = dateString.replace(':', '-')
-predictionName = dateString+".csv"
-print(predictionName)
-predictions.to_csv(dateString+".csv")
-os.chdir("..")
-
-
+# Predict
+# predictions = predict_model(model, data=target_data)
+# os.chdir(os.getcwd()+"/predictions")
+# now = datetime.now()
+# dateString = str(now)
+# dateString = dateString[:16]
+# dateString = dateString.replace(':', '-')
+# predictionName = dateString+".csv"
+# print(predictionName)
+# predictions.to_csv(dateString+".csv")
+# os.chdir("..")
