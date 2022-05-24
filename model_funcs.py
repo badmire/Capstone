@@ -59,11 +59,7 @@ def createNewModel(diff_path,test_path,model_save):
     # plot_model(model, save=True)
     shutil.move(f"./{model_save}.pkl",f"./models/{model_save}.pkl")
 
-
-
-
-
-def forcastPredictions(target_diff_path,model_name,doProcessed=False):
+def forcastPredictions(target_diff_path,model_path):
     """Uses existing model to make predictions.
     Two sets of predictions are produced. The full output of the model is saved
     in the ./predictions directory as a csv, and a condensed, sorted version in
@@ -80,7 +76,7 @@ def forcastPredictions(target_diff_path,model_name,doProcessed=False):
     """
     # Load the model
     os.chdir("./models")
-    model = load_model(model_name)
+    model = load_model(model_path)
     os.chdir("..")
     # Construct list of expected column heads by the model
     headers =  model.named_steps['dtypes'].final_training_columns
