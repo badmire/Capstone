@@ -12,6 +12,7 @@ parser.add_argument('--c', '--custom_model_name', help='Tell the program to load
 parser.add_argument('new_model_option', choices=[0, 1], type=int, help='1: Create a new PyCaret model. 0: Load an existing model.')
 parser.add_argument('diffs_path_arg', help='Specify the path to the diffs.')
 
+# Argument only needed for new model creation.
 if (int(sys.argv[1])):
     parser.add_argument('tests_path_arg', help='Specify the path to the tests.')
 args = parser.parse_args()
@@ -27,14 +28,6 @@ if (args.c is not None):
     modelName = args.c
 
 diffPath = args.diffs_path_arg
-
-
-
-
-model = []
-target_data = []
-
-
 
 # Create the models folder if it doesn't exist
 if not os.path.exists(os.getcwd()+"/models"):

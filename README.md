@@ -39,49 +39,45 @@ $ model.py -> [args]
 
 First argument: 0 or 1
 
-- 0 = Make a new model
+- 1 = Make a new model
 Second argument: path/to/diff/directory
 Third argument: path/to/test/directory
 
-- 1 = Use an old model
-Second argument: path/to/target/raw/diff.txt
+optional flags:
+-c name save model under specified name in the models directory
+
+- 0 = Use an old model
+Second argument: path/to/target/diff.csv
 
 optional flags:
--p  Changes behavior to target a processed diff
--c path/to/model    Use to run a prediction against specified model
+-r  Changes behavior to target a raw diff txt
+-c path/to/model Use to run a prediction against specified model .pkl file
 
-### Flags:
-
-Specify path to save model to or load model from
-
-```
--c path/to/a/model
-```
-
-Tell app to use a processed diff rather than a raw diff
-
-```
--p
-```
 
 ### Example Usage:
 
 Generate new model:
 
 ```
-$ model.py 0 ./diffs ./tests
+$ model.py 1 ./diffs ./tests
 ```
 
-Generate tests on new data:
+Generate new model with the name test:
 
 ```
-$ model.py 1 ./diffs ./tests -c path/to/a/model
+$ model.py 1 ./diffs ./tests -c test
 ```
 
-Generate tests on new data with pre-processed diff:
+Generate predictions on a diff:
 
 ```
-$ model.py 1 ./diffs ./tests -c path/to/a/model -p
+$ model.py 0 ./path/to/diff.csv 
+```
+
+Generate predictions on a diff with a specified model:
+
+```
+$ model.py 0 ./path/to/diff.csv -c /path/to/model
 ```
 
 ## Authors
