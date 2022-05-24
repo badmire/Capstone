@@ -12,6 +12,7 @@ from model_funcs import *
 from supportFunc import *
 from datetime import datetime
 
+
 parser = argparse.ArgumentParser(description='Apply PyCaret ML to a set of tests and diffs.')
 parser.add_argument('--p', '--processed', action='store_true', help='Tell the program to load processed diffs rather than raw diffs.')
 parser.add_argument('--c', '--custom_model_name', help='Tell the program to load or save a PyCaret model with a unique name. Models are saved in the models directory.')
@@ -21,6 +22,7 @@ args = parser.parse_args()
 newModel = False
 doProcessed = False
 modelName = "current_model"
+
 
 
 # argparse handles invalid options
@@ -61,6 +63,7 @@ if newModel == True:
 
 if (newModel == False):
     output = forcastPredictions("./data_unseen/v1_41_8_930.csv",modelName,doProcessed)
+
 
     # for final in output:
     #     print(final)

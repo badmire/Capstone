@@ -12,7 +12,8 @@ categorical_tags = []
 
 special_tags = ["fchange"]
 
-def createNewModel(diff_path,test_path,model_save="current_model"):
+
+def createNewModel(diff_path,test_path,model_save=f"current_model"):
     """Creates new model to be saved.
     -diff_path and test_path should just point at a directory full of 
     diffs and tests respecivly. diffs should be processed in advance 
@@ -61,7 +62,8 @@ def createNewModel(diff_path,test_path,model_save="current_model"):
 
 
 
-def forcastPredictions(target_diff_path,model_name="current_model",doProcessed=False):
+
+def forcastPredictions(target_diff_path,model_path="./models/current_model",doProcessed=False):
     """Uses existing model to make predictions.
     Two sets of predictions are produced. The full output of the model is saved
     in the ./predictions directory as a csv, and a condensed, sorted version in
@@ -69,16 +71,15 @@ def forcastPredictions(target_diff_path,model_name="current_model",doProcessed=F
     the current time stamp.
 
     Uses the default "current_model" that is saved in the ./models directory,
-    can specify a different model to use with the model_name parameter.
+
+    can specify a different model to use with the model_path parameter.
 
     -target_diff_path is the path to a csv diff file that has been processed 
     with extractLogs()
 
     """
     # Load the model
-    os.chdir("./models")
-    model = load_model(model_name)
-    os.chdir("..")
+    model = load_model(model_path)
 
     # Construct list of expected column heads by the model
     headers =  model.named_steps['dtypes'].final_training_columns

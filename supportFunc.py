@@ -1,8 +1,85 @@
 import re
 import csv
 import time
-import glob
 import os
+import pandas as pd
+
+def extractLogs(in_dir,out_dir):
+    # Build list of target files
+    all_files = os.listdir(in_dir)
+    diff_files = []
+
+    for current in all_files:
+        if current.find("diff") >= 0:
+            diff_files.append(current)
+
+    for diff in diff_files:
+        # Set sane values for current diff
+        total_changes_diff = 0
+        total_insertions_diff = 0
+        total_deletions_diff = 0
+        total_touched_diff = 0
+        git_div_ver_diff = str()
+        output = []
+        allLines = []
+
+        with open(in_dir + "/" + diff, "r") as target:
+            allLines = []
+            for line in target.readlines():
+                allLines.append(line)
+
+        git_div_ver = allLines[0].split()[3]  # Git diff ver
+        total_changes_dif = allLines[-1].split()[0]  # Total changes for entire diff
+        total_insertions_dif = allLines[-1].split()[3]  # Total insertions for entire diff
+        total_deletions_dif = allLines[-1].split()[5]  # total deletions for entire diff
+
+        del allLines[0]
+        del allLines[-1]
+
+        total_touched_dif = len(allLines)  # Total number of files changed on diff
+
+        for line in allLines:
+            current = []
+            current_target = line.split()
+            current.append(current_target[0])  # File name
+            try:
+                current.append(current_target[0].split(".")[1])  # File extension
+            except:
+                current.append("none")
+
+            current.append(line.split("|")[1].count("+"))  # Total additions for file
+            current.append(line.split("|")[1].count("-"))  # Total deletions for file
+            current.append(current[-2] + current[-1])  # Total changes for file
+
+            current.append(git_div_ver)
+            current.append(total_changes_dif)
+            current.append(total_insertions_dif)
+            current.append(total_deletions_dif)
+            current.append(total_touched_dif)
+
+            output.append(current)
+
+        with open(
+            out_dir + "/" + diff.split("_diff")[0] + ".csv", "w", newline=""
+        ) as out_target:
+            csvwriter = csv.writer(out_target, delimiter=",", quotechar="|")
+            csvwriter.writerow(
+                [
+                    "Filename",
+                    "file extension",
+                    "total changes for file",
+                    "total additions for file",
+                    "total deletions for file",
+                    "diff ver",
+                    "total changes for diff",
+                    "total addtions for diff",
+                    "total deletions for diff",
+                    "total number of files changed for diff",
+                ]
+            )
+
+            for row in output:
+                csvwriter.writerow(row)
 
 
 def tableCreate(tags, tests, diffs):
@@ -98,7 +175,8 @@ def fileChange(diffs):
 
 
 def historicRecord(tests):
-    """Take in dict of tests of the format from the readTests() function, for each test calculate historic fail rate, return dict.
+    """***Not currently working with predictions***
+    Take in dict of tests of the format from the readTests() function, for each test calculate historic fail rate, return dict.
 
     Calculates historic pass/fail rate over all tests results.
 
@@ -134,51 +212,25 @@ def historicRecord(tests):
     return output
 
 
-def confidenceThreshold(prediction_list):
-    """
-    Take in a list of dictionaries stored as prediction_list and order it according to the following structure:
-        1. All failed tests
-        2. Confidence: low to high
+def loadFiles(target_dir):
+    """Takes in directory, returns list of paths to all files in that directory."""
 
-    Each dictionary in the list has a key for “prediction” which is either the string “SUCCESS” or “FAILURE”. Each dictionary has a key for “confidence” which is a number 0-1. 1 being 100% confident and 0 being 0% confident.
+    file_paths = []
 
-    Sort the list to have all failed tests at the start of the list and then have the lowest confident tests next. The end of the list therefore has the highest confidence test prediction.
+    for file in os.scandir(target_dir):
+        file_paths.append(file.path)
 
-    return(sorted_prediction_list)
-
-    """
-    return sorted(prediction_list, key=lambda x: (x["prediction"], x["confidence"]))
+    return file_paths
 
 
-def loadFiles(File_Type):
-    # THIS FUNCTION NEEDS TO CHANGE TO ACCEPT A PATH W/O HUMAN INTERACTION
-    # A command line argument perhaps?
-    # Ideally, it would point to a directory full of the stuff we need, and just let us run model.py /diffs/directory /tests/directory
-    # file_names = askopenfilenames(title=File_Type, filetypes=[("Data", ("*.csv"))])
-
-    if File_Type == "Diff csvs":
-        os.chdir(os.getcwd() + "/diffs")
-        file_names = [file for file in glob.glob("*.csv")]
-    if File_Type == "Test csvs":
-        os.chdir(os.getcwd() + "/tests")
-        file_names = [file for file in glob.glob("*.csv")]
-    if File_Type == "Models":
-        os.chdir(os.getcwd() + "/models")
-        file_names = [file for file in glob.glob("*.pkl")]
-
-    os.chdir("..")
-    # print(file_names)
-    return file_names
-
-
-def versionMatch():
+def versionMatch(diff_dir_path, test_dir_path):
     """
     Take in path to a directory for diffs, and one for tests, return dictionary with diffs matched to test sets.
     {diff vers: [diff vers path, [test paths,test paths]]}
 
     """
-    diffs = loadFiles("Diff csvs")
-    tests = loadFiles("Test csvs")
+    diffs = loadFiles(diff_dir_path)
+    tests = loadFiles(test_dir_path)
 
     output = dict()
     for diff in diffs:
@@ -204,12 +256,10 @@ def log_err(text, target_path):
 
 def readTests(vM_dict):
     """
-    Take in versionMatch() dict, load all data fields from from each test into output dict, organized by version.
+    Take in versionMatch() dict, load all data fields from from each test into output dict, organized by version. Also responsible for building test_lib.txt
 
     Skipping untested/skipped tests coupled with indexing tests by scenario number yields no duplicate
     tests in a given version at this time.
-
-    ***Refactored condenseTests***
 
     Output will be a dictionary.
     Each key will be the version number, and each value will be a dictionary.
@@ -218,13 +268,15 @@ def readTests(vM_dict):
     """
     output = dict()
 
+    # Record keeping for injested tests.
+    test_lib_file = open("./test_lib.txt","w+")
+    test_lib = test_lib_file.readlines()
+
     lines_processed = 0
     for k, v in vM_dict.items():
         output[k] = dict()
         for test_csv in v[1]:
-            with open(
-                os.getcwd() + "/tests/" + test_csv, "r", encoding="utf8"
-            ) as csv_file:
+            with open(test_csv, "r", encoding="utf8") as csv_file:
                 current = csv.DictReader(csv_file)
                 for row in current:
                     lines_processed += 1
@@ -236,6 +288,9 @@ def readTests(vM_dict):
                         not in output[k]
                     ):
                         output[k][row["test_name"]] = dict()
+
+                        # Keep a running list of all tests in database for long term use
+                        test_lib = list(set(test_lib + [row["test_name"]]))
                     else:
                         log_err(
                             f"Error, duplicate: {row['test_name']} already in use. Version {k}, {test_csv}",
@@ -245,6 +300,13 @@ def readTests(vM_dict):
                     for title, value in row.items():
                         output[k][row["test_name"]][title] = value
         print(f"Lines processed: {lines_processed}")
+
+    # Write test library for later use
+    for line in test_lib:
+        line = line + '\n'
+        test_lib_file.write(line)
+    test_lib_file.close()
+
     return output
 
 
@@ -268,7 +330,7 @@ def loadDiffs(vM_dict):
 
     for k, v in vM_dict.items():
         current = dict()
-        with open(os.getcwd() + "/diffs/" + v[0], "r", encoding="utf8") as target:
+        with open(v[0], "r", encoding="utf8") as target:
             diff = csv.DictReader(target)
             file_changes = []
 
@@ -293,82 +355,55 @@ def loadDiffs(vM_dict):
 
     return output
 
+def createPandasFrame(numerical_tags, categorical_tags, special_tags,diff_path,test_path):
+    """Create the pandas data frame needed for the model
+    
+    Currently possible tags:
+    From diffs:
+    "total_change", "total_add", "total_del", "total_fchange",
+    From tests:
+    "child_link","parent_test_chain","child_result","parent_link","parent_start_date","sw_version","result","run_time","error_message","instrument_name","instrument_git_hash","run_date","collection_date","dut_console_log","is_system_test","connection_type","visa_name","test_git_hash","ptf_git_hash","test_log_file","test_name","test_requirements","test_description","scenario_number","expected_skipped_models","linked_issues_snapshot","seed"
+    Misc:
+    "historic"
 
-class TestStruct:
-    # ***Depriciated, use readTests()***
-    def __init__(self, name):
-        self.name = name
-        self.current_score = -1
-        # Array of tuples, one with result, one with machine, if any.
-        self.tests = []
-        # Historical pass fail rate, dummy value for now
-        self.historical = 0.5
-
-    def __eq__(self, other):
-        if self.name == other:
-            return True
-        else:
-            return False
-
-    def __repr__(self):
-        return f"TestStruct: {self.name}"
-
-
-def condenseTests(vM_dict):
+    Special:
+    "fchange"
     """
-    Take in matched set from versionMatch(), load into TestStruct for averaging
-    ***Depriciated, use readTests()***
+    # Load and match diffs to tests
+    result = versionMatch(diff_path,test_path)
 
-    vM_dict == versionMatch() return value
+    # Load tests and condense them into TestStruct class
+    tests = readTests(result)
 
-    return:
-    dict with version # as keys
-    dict as values
-    values hold:
-    test name as key
-    test struct as value
-    """
-    output = dict()
+    # Load diffs/features
+    diffs = loadDiffs(result)
 
-    lines_processed = 0
-    for k, v in vM_dict.items():
-        output[k] = dict()
-        for test_csv in v[1]:
-            with open(test_csv, "r", encoding="utf8") as csv_file:
-                current = csv.DictReader(csv_file)
-                for row in current:
-                    lines_processed += 1
-                    if (
-                        row["result"] == "skipped"
-                        or row["result"] == "untested"
-                        # row["result"]
-                        # == "ABORTED"
-                    ):  # Don't let skipped test effect weight
-                        continue
 
-                    if row["test_name"] not in output:
-                        # create new
-                        output[k][row["test_name"]] = TestStruct(row["test_name"])
-                    # update existing/give current values
-                    if row["instrument_name"] is not None:
-                        output[k][row["test_name"]].tests.append(
-                            (row["result"], row["instrument_name"])
-                        )
-                    else:
-                        output[k][row["test_name"]].tests.append((row["result"], None))
-            print(f"Lines processed: {lines_processed}")
-    return output
+
+
+
+    final_set = tableCreate(
+        numerical_tags + categorical_tags + special_tags, tests, diffs)
+
+    # Adjust which columns to include here
+    if "fchange" in special_tags:
+        file_names = fileChange(diffs)
+        for file in file_names:
+            numerical_tags.append(f"{file}_change")
+            numerical_tags.append(f"{file}_del")
+            numerical_tags.append(f"{file}_add")
+            categorical_tags.append(f"{file}_name")
+            categorical_tags.append(f"{file}_extension")
+    
+    return pd.DataFrame(final_set)
 
 
 if __name__ == "__main__":
     # Informal test for historical
 
-    files = versionMatch()
+    files = versionMatch("./diffs","./tests")
 
     diffs = loadDiffs(files)
     tests = readTests(files)
 
     output = tableCreate(["fchange"], tests, diffs)
-
-    for k, v in output.items():
-        print(k, len(v))
