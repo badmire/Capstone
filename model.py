@@ -6,30 +6,44 @@
 
 from pycaret.classification import *
 import sys
+import argparse
 
 from model_funcs import *
 from supportFunc import *
 from datetime import datetime
 
 
-
-
-if (len(sys.argv) != 2):
-    print("Please add the following command line option: ")
-    print("0: Train (Create a new model)")
-    print("1: Predict (Use old model to predict test outcomes)")
-    sys.exit
-
+parser = argparse.ArgumentParser(description='Apply PyCaret ML to a set of tests and diffs.')
+parser.add_argument('--p', '--processed', action='store_true', help='Tell the program to load processed diffs rather than raw diffs.')
+parser.add_argument('--c', '--custom_model_name', help='Tell the program to load or save a PyCaret model with a unique name. Models are saved in the models directory.')
+parser.add_argument('new_model_option', choices=[0, 1], type=int, help='0: Create a new PyCaret model. 1: Load an existing model.')
+args = parser.parse_args()
 
 newModel = False
+doProcessed = False
+modelName = "current_model"
+
+
+
+# argparse handles invalid options
+if (args.new_model_option == 0):
+    newModel = True
+elif (args.new_model_option == 1):
+    newModel = False
+
+if (args.p is not None):
+    doProcessed = True
+
+if (args.c is not None):
+    modelName = args.c
+
+
+
+
 model = []
 target_data = []
 
 
-if (sys.argv[1] == '1'):
-    newModel = False
-elif (sys.argv[1] == '0'):
-    newModel = True
 
 # Create the models folder if it doesn't exist
 if not os.path.exists(os.getcwd()+"/models"):
@@ -44,11 +58,12 @@ if not os.path.exists(os.getcwd()+"/output"):
     os.mkdir(os.getcwd()+"/output")
 
 if newModel == True:
-    createNewModel("./diffs","./tests")
+    createNewModel("./diffs","./tests",modelName)
 
 
 if (newModel == False):
-    output = forcastPredictions("./data_unseen/v1_41_8_930.csv")
+    output = forcastPredictions("./data_unseen/v1_41_8_930.csv",modelName,doProcessed)
+
 
     # for final in output:
     #     print(final)

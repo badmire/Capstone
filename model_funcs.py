@@ -12,6 +12,7 @@ categorical_tags = []
 
 special_tags = ["fchange"]
 
+
 def createNewModel(diff_path,test_path,model_save=f"current_model"):
     """Creates new model to be saved.
     -diff_path and test_path should just point at a directory full of 
@@ -61,7 +62,8 @@ def createNewModel(diff_path,test_path,model_save=f"current_model"):
 
 
 
-def forcastPredictions(target_diff_path,model_path="./models/current_model"):
+
+def forcastPredictions(target_diff_path,model_path="./models/current_model",doProcessed=False):
     """Uses existing model to make predictions.
     Two sets of predictions are produced. The full output of the model is saved
     in the ./predictions directory as a csv, and a condensed, sorted version in
@@ -69,6 +71,7 @@ def forcastPredictions(target_diff_path,model_path="./models/current_model"):
     the current time stamp.
 
     Uses the default "current_model" that is saved in the ./models directory,
+
     can specify a different model to use with the model_path parameter.
 
     -target_diff_path is the path to a csv diff file that has been processed 
