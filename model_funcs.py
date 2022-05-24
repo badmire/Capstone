@@ -13,7 +13,7 @@ categorical_tags = []
 special_tags = ["fchange"]
 
 
-def createNewModel(diff_path,test_path,model_save=f"current_model"):
+def createNewModel(diff_path,test_path,model_save):
     """Creates new model to be saved.
     -diff_path and test_path should just point at a directory full of 
     diffs and tests respecivly. diffs should be processed in advance 
@@ -54,16 +54,16 @@ def createNewModel(diff_path,test_path,model_save=f"current_model"):
     print("Tuning the new model...")
     model = blend_models(estimator_list = best_models)
     print("Sucessfully tuned model.")
-    plot_model(model, save=True)
 
     save_model(model, model_save)
+    # plot_model(model, save=True)
     shutil.move(f"./{model_save}.pkl",f"./models/{model_save}.pkl")
 
 
 
 
 
-def forcastPredictions(target_diff_path,model_path="current_model",doProcessed=False):
+def forcastPredictions(target_diff_path,model_name,doProcessed=False):
     """Uses existing model to make predictions.
     Two sets of predictions are produced. The full output of the model is saved
     in the ./predictions directory as a csv, and a condensed, sorted version in
@@ -80,7 +80,7 @@ def forcastPredictions(target_diff_path,model_path="current_model",doProcessed=F
     """
     # Load the model
     os.chdir("./models")
-    model = load_model(model_path)
+    model = load_model(model_name)
     os.chdir("..")
     # Construct list of expected column heads by the model
     headers =  model.named_steps['dtypes'].final_training_columns

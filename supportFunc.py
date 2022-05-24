@@ -399,11 +399,25 @@ def createPandasFrame(numerical_tags, categorical_tags, special_tags,diff_path,t
 
 
 if __name__ == "__main__":
-    # Informal test for historical
+    # Informal test for accuracy of predictions
 
     files = versionMatch("./diffs","./tests")
 
     diffs = loadDiffs(files)
     tests = readTests(files)
 
-    output = tableCreate(["fchange"], tests, diffs)
+    target = open("./output/output-2022-05-24 12-12-36.927066.csv","r")
+
+    lines = target.readlines()
+
+
+    for i in range(1,31):
+        current_test = lines[i].split(",")[0]
+        current_result = lines[i].split(",")[1]
+
+        try:
+            print(f"{current_test}: predicted: {current_result}, actual: {tests['1_43_37_1057'][current_test]['result']}")
+        except KeyError:
+            print(f"{current_test} not tested in final testing")
+
+

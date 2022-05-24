@@ -1,48 +1,33 @@
-# Steps:
-# 1. Take data from csvs into one variable
-# 2. Setup data into test and training set
-# 3. Create Model based on data
-# 4. Add additional CSV's and associate correctly
-
 from pycaret.classification import *
-import sys
 import argparse
-
+import sys
 from model_funcs import *
 from supportFunc import *
-from datetime import datetime
+
 
 
 parser = argparse.ArgumentParser(description='Apply PyCaret ML to a set of tests and diffs.')
-parser.add_argument('--p', '--processed', action='store_true', help='Tell the program to load processed diffs rather than raw diffs.')
+parser.add_argument('--r', '--raw', action='store_true', help='Tell the program to load raw diff rather than processed diff.')
 parser.add_argument('--c', '--custom_model_name', help='Tell the program to load or save a PyCaret model with a unique name. Models are saved in the models directory.')
-parser.add_argument('new_model_option', choices=[0, 1], type=int, help='0: Create a new PyCaret model. 1: Load an existing model.')
+parser.add_argument('new_model_option', choices=[0, 1], type=int, help='1: Create a new PyCaret model. 0: Load an existing model.')
 parser.add_argument('diffs_path_arg', help='Specify the path to the diffs.')
-parser.add_argument('tests_path_arg', help='Specify the path to the tests.')
+
+if (int(sys.argv[1])):
+    parser.add_argument('tests_path_arg', help='Specify the path to the tests.')
 args = parser.parse_args()
 
-newModel = False
-doProcessed = False
+newModel = args.new_model_option
+do_raw_diff = False
 modelName = "current_model"
-diffsPath = "./diffs/v1_41_8_930.csv"
-testsPath = "./tests"
 
-
-
-# argparse handles invalid options
-if (args.new_model_option == 0):
-    newModel = True
-elif (args.new_model_option == 1):
-    newModel = False
-
-if (args.p is not None):
-    doProcessed = True
+if (args.r is not None):
+    do_raw_diff = True
 
 if (args.c is not None):
     modelName = args.c
 
 diffPath = args.diffs_path_arg
-testPath = args.tests_path_arg
+
 
 
 
@@ -63,27 +48,21 @@ if not os.path.exists(os.getcwd()+"/predictions"):
 if not os.path.exists(os.getcwd()+"/output"):
     os.mkdir(os.getcwd()+"/output")
 
-if newModel == True:
-    createNewModel(diffPath,testsPath,modelName)
+if newModel:
+    testPath = args.tests_path_arg
+    createNewModel(diffPath,testPath,modelName)
+else:
+    if (do_raw_diff):
+        os.mkdir(os.getcwd()+"/tmp")
+        shutil.copy(diffPath,os.getcwd()+"/tmp")
+        extractLogs(os.getcwd()+"/tmp",os.getcwd()+"/tmp")
+        diffPath = [x for x in os.scandir(os.getcwd()+"/tmp") if ".csv" in x.name][0].path
+
+    output = forcastPredictions(diffPath,modelName)
+
+    if (do_raw_diff):
+        shutil.rmtree(os.getcwd()+"/tmp")
 
 
-if (newModel == False):
-    output = forcastPredictions(diffPath,modelName,doProcessed)
 
 
-    # for final in output:
-    #     print(final)
-
-
-
-# Predict
-# predictions = predict_model(model, data=target_data)
-# os.chdir(os.getcwd()+"/predictions")
-# now = datetime.now()
-# dateString = str(now)
-# dateString = dateString[:16]
-# dateString = dateString.replace(':', '-')
-# predictionName = dateString+".csv"
-# print(predictionName)
-# predictions.to_csv(dateString+".csv")
-# os.chdir("..")
