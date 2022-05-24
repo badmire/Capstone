@@ -9,13 +9,20 @@ from supportFunc import *
 parser = argparse.ArgumentParser(description='Apply PyCaret ML to a set of tests and diffs.')
 parser.add_argument('--r', '--raw', action='store_true', help='Tell the program to load raw diff rather than processed diff.')
 parser.add_argument('--c', '--custom_model_name', help='Tell the program to load or save a PyCaret model with a unique name. Models are saved in the models directory.')
-parser.add_argument('new_model_option', choices=[0, 1], type=int, help='1: Create a new PyCaret model. 0: Load an existing model.')
-parser.add_argument('diffs_path_arg', help='Specify the path to the diffs.')
+parser.add_argument('new_model_option', choices=[0, 1, 2], type=int, help='2: Process diffs for use in training and predictions 1: Create a new PyCaret model. 0: Load an existing model. ')
+parser.add_argument('diffs_path_arg', help='Specify the path to the diffs. If extracting via option 2, specify path to directory with diff.txt files')
 
 # Argument only needed for new model creation.
-if (int(sys.argv[1])):
-    parser.add_argument('tests_path_arg', help='Specify the path to the tests.')
+try:
+    if (int(sys.argv[1])):
+        parser.add_argument('tests_path_arg', help='Specify the path to the tests. If extracting via option 2, specify path to output directory')
+except:
+    pass
 args = parser.parse_args()
+
+if args.new_model_option == 2:
+    extractLogs(args.diffs_path_arg,args.tests_path_arg)
+    quit()
 
 newModel = args.new_model_option
 do_raw_diff = False

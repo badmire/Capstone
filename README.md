@@ -16,7 +16,7 @@ Our solution to this particular problem is to leverage the power of machine lear
 ### Dependencies
 
 - Python 3.6
-- Pycaret
+- Pycaret 2.3.10
 - Pandas
 
 ### Installing
@@ -37,7 +37,7 @@ pip install -r requirements.txt
 $ model.py -> [args]
 ```
 
-First argument: 0 or 1
+First argument: 1, 2 or 0
 
 - 1 = Make a new model
 Second argument: path/to/diff/directory
@@ -45,6 +45,10 @@ Third argument: path/to/test/directory
 
 optional flags:
 -c name save model under specified name in the models directory
+
+- 2 = Extract diffs
+Second argument: /path/to/diff/directory
+Third argument: /path/to/output/directory
 
 - 0 = Use an old model
 Second argument: path/to/target/diff.csv
@@ -80,6 +84,11 @@ Generate predictions on a diff with a specified model:
 $ model.py 0 ./path/to/diff.csv -c /path/to/model
 ```
 
+Process diffs for training and prediction
+
+```
+python model.py 2 ./in ./out
+```
 ## Authors
 
 - Brandon Admire (badmire4237@gmail.com)
