@@ -22,3 +22,6 @@ USER appuser
 
 # Enter container shell
 ENTRYPOINT ["/bin/sh"]
+
+# The following would allow for the Docker container to automatically create a new model when it is powered on
+# CMD ["python", "model.py", "1", "./diffs", "./tests"]
