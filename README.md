@@ -31,6 +31,20 @@ myenv\Scripts\activate
 pip install -r requirements.txt
 ```
 
+### Docker Setup
+
+Docker is required to use the Dockerfile
+
+Perform the following in the same directory as the Dockerfile and the rest of the repository contents to build an image named 'model':
+```
+docker build -t model .
+```
+
+Perform the following to create a container named 'model_container' in interactive mode:
+```
+docker run -it --name model_container model
+```
+
 ## Executing program
 
 ```
